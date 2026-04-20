@@ -1,0 +1,80 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, year, tags, summary, thumb } = project.data;
+const href = `/work/${project.id}`;
+---
+
+<article class="project-card">
+  <a href={href} class="project-card__link" aria-label={`View ${title} case study`}>
+    <div class="project-card__thumb">
+      <Image
+        src={thumb}
+        alt={`${title} thumbnail`}
+        width={800}
+        height={600}
+        class="project-card__img"
+      />
+    </div>
+    <div class="project-card__info">
+      <div class="project-card__meta font-mono">
+        <span class="text-muted">{year}</span>
+        <span class="text-muted">·</span>
+        <span class="text-muted">{tags[0]}</span>
+      </div>
+      <h2 class="project-card__title font-display">{title}</h2>
+      <p class="project-card__summary text-muted">{summary}</p>
+    </div>
+  </a>
+</article>
+
+<style>
+  .project-card__link {
+    display: block;
+    text-decoration: none;
+  }
+
+  .project-card__thumb {
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    background-color: var(--color-border);
+    margin-bottom: 1.25rem;
+  }
+
+  .project-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .project-card__link:hover .project-card__img {
+    transform: scale(1.03);
+  }
+
+  .project-card__meta {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-card__title {
+    font-size: 1.375rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .project-card__summary {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+</style>

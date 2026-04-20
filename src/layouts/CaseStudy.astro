@@ -1,0 +1,77 @@
+---
+import Base from './Base.astro';
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, summary, role, year, client, tags, hero } = project.data;
+---
+
+<Base title={title} description={summary}>
+  <article class="case-study">
+    <header class="case-study__header">
+      <div class="case-study__meta">
+        <span class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">
+          {tags.join(' · ')}
+        </span>
+      </div>
+      <h1 class="case-study__title font-display" style="font-size: clamp(3rem, 8vw, 7rem);">
+        {title}
+      </h1>
+      <p class="case-study__summary" style="max-width: 55ch; font-size: 1.125rem; line-height: 1.6; color: var(--color-muted);">
+        {summary}
+      </p>
+      <dl class="spec-block font-mono" style="display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 2rem; font-size: 0.75rem; margin-top: 2rem;">
+        <dt style="color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em;">Role</dt>
+        <dd>{role}</dd>
+        <dt style="color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em;">Year</dt>
+        <dd>{year}</dd>
+        {client && (
+          <>
+            <dt style="color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em;">Client</dt>
+            <dd>{client}</dd>
+          </>
+        )}
+      </dl>
+    </header>
+
+    <div class="case-study__hero" style="margin: 4rem 0; overflow: hidden;">
+      <Image
+        src={hero}
+        alt={`${title} hero image`}
+        widths={[800, 1200, 1600, 2000]}
+        sizes="100vw"
+        style="width: 100%; height: 60vh; object-fit: cover;"
+      />
+    </div>
+
+    <div class="case-study__body prose" style="max-width: 72ch; margin: 0 auto; padding: 0 var(--space-md);">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .case-study__header {
+    padding: var(--space-xl) var(--space-md) var(--space-lg);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .prose :global(h2) {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .prose :global(p) {
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    color: var(--color-ink);
+  }
+</style>

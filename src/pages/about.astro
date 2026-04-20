@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="About" description="Nate Schiffler — Creative Technologist & Graphic Designer based in Bloomington, MN.">
+  <article style="padding: var(--space-xl) var(--space-md); max-width: 1200px; margin: 0 auto;">
+    <header style="margin-bottom: var(--space-xl);">
+      <h1 class="font-display" style="font-size: clamp(3rem, 7vw, 6rem); margin: 0 0 1rem;">
+        Hi, I'm Nate.
+      </h1>
+      <p class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">
+        Creative Technologist & Graphic Designer
+      </p>
+    </header>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+      <div>
+        <p style="max-width: 55ch; line-height: 1.7; margin-bottom: 1.5rem;">
+          I build cohesive visual identities, strategic brand systems, and high-impact digital
+          experiences that translate complex ideas into clear, compelling narratives. My work
+          blends creative direction with technical execution, integrating AI-driven workflows
+          to accelerate ideation, expand visual range, and modernize production processes.
+        </p>
+        <p style="max-width: 55ch; line-height: 1.7; color: var(--color-muted);">
+          Based in Bloomington, MN. Available for freelance and full-time opportunities in the
+          Twin Cities and remotely.
+        </p>
+      </div>
+
+      <dl class="font-mono" style="font-size: 0.75rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.75rem 2rem; align-content: start;">
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Brand</dt>
+        <dd>Identity, campaigns, visual systems</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Product</dt>
+        <dd>UI/UX, prototyping, motion</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Physical</dt>
+        <dd>Packaging, exhibition, apparel</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">AI-Assisted</dt>
+        <dd>Image gen, video gen, workflow integration</dd>
+      </dl>
+    </div>
+
+    <section style="border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-bottom: var(--space-xl);">
+      <h2 class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.5rem;">
+        Creative Stack
+      </h2>
+      <dl class="font-mono" style="font-size: 0.75rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.75rem 2rem;">
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Design</dt>
+        <dd>Figma, Illustrator, InDesign, Photoshop</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">3D</dt>
+        <dd>Cinema 4D, Blender</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Motion</dt>
+        <dd>After Effects, Premiere</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">AI</dt>
+        <dd>Midjourney, Runway, ComfyUI, ChatGPT</dd>
+        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Code</dt>
+        <dd>HTML/CSS/JS, Git</dd>
+      </dl>
+    </section>
+
+    <section style="border-top: 1px solid var(--color-border); padding-top: var(--space-lg);">
+      <h2 class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.5rem;">
+        Now
+      </h2>
+      <p style="max-width: 55ch; line-height: 1.7;">
+        Currently exploring AI-native design workflows and how they change the economics of
+        creative production.
+      </p>
+    </section>
+  </article>
+</Base>

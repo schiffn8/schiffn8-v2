@@ -1,0 +1,24 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectGrid from '../../components/ProjectGrid.astro';
+import { getCollection } from 'astro:content';
+
+const allProjects = await getCollection('projects', ({ data }) => !data.draft);
+const projects = allProjects.sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title="Work" description="Selected projects by Nate Schiffler — brand, product, motion, and physical design.">
+  <section style="padding: var(--space-xl) var(--space-md);">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <header style="margin-bottom: var(--space-xl);">
+        <p class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem;">
+          Selected Work
+        </p>
+        <h1 class="font-display" style="font-size: clamp(3rem, 7vw, 6rem); margin: 0;">
+          Projects
+        </h1>
+      </header>
+      <ProjectGrid projects={projects} />
+    </div>
+  </section>
+</Base>
