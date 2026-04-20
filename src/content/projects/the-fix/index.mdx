@@ -1,9 +1,9 @@
 ---
 title: "The Fix"
 year: 2025
-role: "Designer, Concept"
+role: "Lead Designer, Concept"
 tags: ["Campaign", "Identity", "Product"]
-summary: "An overdose prevention campaign and intervention kit, designed after watching a friend die without naloxone in reach."
+summary: "An overdose prevention campaign and intervention kit. Dedicated to Sawyer."
 hero: "./images/hero.jpg"
 thumb: "./images/thumb.jpg"
 order: 1
@@ -11,49 +11,56 @@ featured: true
 draft: false
 ---
 
-{/* TODO — CONTEXT SECTION
-    Fill in the three paragraphs below. The migration plan specifies:
-    Paragraph 1: The personal incident — what happened, when, why it stays with you
-    Paragraph 2: Public health context — fentanyl crisis, naloxone availability, the knowledge gap
-    Paragraph 3: The specific brief you set for yourself — not just awareness, but tangible intervention
-    The "Dedicated to Sawyer" dedication is powerful — keep it, put it up front.
-*/}
-
-## Context
-
-The Fix is an overdose prevention campaign and intervention kit. It exists because I watched a friend die in a dorm room and didn't have naloxone on hand.
-
-**Dedicated to Sawyer.**
-
-[TODO: Expand into 2 more paragraphs — the public health context (fentanyl crisis, naloxone availability gap among young people), and the specific brief you set for yourself: not just awareness posters, but a physical kit that puts naloxone and information in the same hands at the same moment.]
-
-## Approach
-
-### Identity
-
-The campaign identity anchors on yellow — high visibility, universally readable as a signal color, distinct from the clinical blue-white of pharmaceutical packaging. The wordmark is set tight, no decoration. The voice is direct: "Be Prepared, Save Lives."
-
-[TODO: Add 1-2 sentences on why you made those specific choices — the color rationale, the voice rationale.]
-
 import { Image } from 'astro:assets';
 import logo from './images/01-logo.png';
 import shirtYellow from './images/02-shirt-yellow.jpg';
 import shirtWhite from './images/03-shirt-white.jpg';
 import shirtBlue from './images/04-shirt-blue.jpg';
 
-<Image src={logo} alt="The Fix wordmark and brand identity" />
+## Context
+
+The Fix is an overdose prevention campaign and intervention kit. It exists because I watched a friend die without naloxone in reach.
+
+**Dedicated to Sawyer.**
+
+{/* TODO — Write 1–2 sentences about the specific incident with Sawyer: when it happened, what the situation was, why not having naloxone on hand mattered. This is the emotional core of the project — the more specific you are, the more it lands. */}
+
+Fentanyl contamination has made drug use unpredictably lethal — including for people who had no idea they were near it. Naloxone reverses opioid overdose in minutes, is available over the counter, and costs less than ten dollars. The problem isn't access. It's that most young people don't know what it is, don't carry it, and don't feel like the crisis applies to them.
+
+The brief I set for myself: not just awareness, but intervention. A campaign that puts the knowledge and the tool in the same hands at the same moment.
+
+This project began with [*High Enough?*](/work/high-enough) — a data visualization piece that mapped the scale of the epidemic. The Fix is what came after: the answer to what all that data means in practice.
+
+## Approach
+
+### Identity
+
+The campaign anchors on yellow — high-visibility, universally readable as a signal, distinct from the clinical blue-white of pharmaceutical packaging. The voice is direct: *Be Prepared, Save Lives.* No euphemism.
+
+<Image src={logo} alt="The Fix — wordmark and brand identity system" />
+
+{/* TODO — Add 2–3 sentences on the reasoning behind the specific type and voice decisions. Why this yellow? Why this wordmark structure? What alternatives did you explore? */}
 
 ### The Kit
 
-The physical intervention kit pairs the awareness campaign with action — naloxone, fentanyl test strips, and instructions in one package. The design problem was making it feel approachable rather than clinical, so people would keep it rather than throw it away.
+The physical intervention kit pairs the campaign with action: naloxone, fentanyl test strips, and instructions in one package. The design challenge was making it feel approachable — something people would keep on them rather than stow in a drawer.
 
-[TODO: Add description of the kit components and packaging decisions. Any box shots or test strip imagery should go here — provide BOXPICEDIT.jpg and related box photos if you have them locally.]
+{/* TODO — Drop your box shots and physical kit photos here. The migration plan references BOXPICEDIT.jpg and test strip imagery — add those to /images/ and uncomment the Image tags below. If you have 3D renders of the kit, this is the right place for them. */}
+
+{/* 
+import kitBox from './images/kit-box.jpg';
+import kitContents from './images/kit-contents.jpg';
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0;">
+  <Image src={kitBox} alt="The Fix — overdose prevention kit, exterior" />
+  <Image src={kitContents} alt="The Fix — kit contents: naloxone, test strips, instructions" />
+</div>
+*/}
 
 ### Campaign
 
-The apparel system extends the campaign into everyday carry — shirts that normalize the conversation rather than hide it.
+The apparel system extends the campaign into everyday carry — shirts that normalize the conversation rather than hide it. Five colorways; yellow is the statement piece.
 
-<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 2rem 0;">
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin: 2rem 0;">
   <Image src={shirtYellow} alt="The Fix — yellow shirt" />
   <Image src={shirtWhite} alt="The Fix — white shirt" />
   <Image src={shirtBlue} alt="The Fix — blue shirt" />
@@ -61,15 +68,21 @@ The apparel system extends the campaign into everyday carry — shirts that norm
 
 ## Outcome
 
-[TODO: Write the outcome section. Options from the migration plan:
-- Exhibition outcome: how was the thesis show received? Any specific response from visitors, faculty, press?
-- Reach: did it lead to anything beyond the thesis? Reposts, conversations, follow-on work?
-- Personal outcome: what did the work make possible?
+{/* TODO — Fill in what happened after the exhibition:
+- Where and when was it shown? (venue, dates)
+- How many kits were produced?
+- Any notable response from visitors, faculty, or press?
+- Did it lead to anything beyond the thesis? Conversations, follow-on work, reposts?
+- If no metrics, write a paragraph on what the work made possible or what it changed for you.
 
-If no metrics, a SpecBlock with: EXHIBITED / KIT COPIES PRODUCED / any press or response works fine.]
+A SpecBlock works well here:
+  EXHIBITED   [venue] · [dates]
+  KITS        [number produced]
+  RESPONSE    [any notable press or feedback]
+*/}
 
 ## Credits
 
-Design, concept: Nate Schiffler
-Photography: [Victoria Kosel](https://www.victoriakosel.com)
-[TODO: Add faculty advisor, printer, manufacturer, or any other contributors]
+Design, Concept — Nate Schiffler  
+Photography — [Victoria Kosel](https://www.victoriakosel.com)  
+{/* TODO — Faculty advisor? Printer or manufacturer? Anyone else who contributed? */}

@@ -3,33 +3,13 @@ title: "High Enough?"
 year: 2024
 role: "Designer"
 tags: ["Editorial", "Data Visualization", "Print"]
-summary: "A data visualization editorial piece on America's fentanyl crisis — translating public health statistics into a visual argument you can't look away from."
+summary: "A data visualization poster on America's fentanyl crisis — the research that became the foundation for The Fix."
 hero: "./images/hero.jpg"
 thumb: "./images/thumb.jpg"
 order: 6
 featured: false
 draft: false
 ---
-
-{/* TODO — METADATA
-    Confirm: year, role, context (coursework? self-initiated? real publication?)
-    Key questions from migration plan:
-    - Is "High Enough?" a real publication, a concept, or editorial design coursework?
-    - What's the editorial angle — what's the content actually about?
-    - Is there a connection to The Fix? (Both deal with the fentanyl crisis — is that intentional?)
-    - Outcomes: distribution, readership, any published reality?
-*/}
-
-## Context
-
-"High Enough?" is a data visualization editorial piece examining the scale of America's drug epidemic — specifically fentanyl contamination and overdose statistics.
-
-The challenge with data about a crisis is that statistics alone don't move people. A number like "80,000 overdose deaths in a year" is too large to feel real. The editorial goal was to find the visual language that makes the scale land — naturalistic rather than clinical, visceral rather than bureaucratic.
-
-[TODO: Was this for a class, self-initiated, or a real publication? What data sources did you use? What was the design brief or editorial thesis?
-If there's a thematic connection to The Fix — both projects engaging the same crisis — that's worth naming explicitly.]
-
-## Approach
 
 import { Image } from 'astro:assets';
 import cover from './images/01-cover.jpg';
@@ -38,20 +18,32 @@ import poster from './images/03-poster.jpg';
 import tile from './images/04-tile.jpg';
 import box from './images/05-box.jpg';
 
-### Editorial Concept
+## Context
 
-[TODO: Describe the editorial structure — is this a magazine? a poster series? a zine? What is "High Enough?" as a physical artifact?]
+"High Enough?" is a data visualization editorial piece on the scale of America's opioid and fentanyl epidemic. It came before [*The Fix*](/work/the-fix) — the research and visual language developed here became the foundation for that project.
 
-The title itself is rhetorical: at what point is the death toll "high enough" to demand change? The naturalistic graphics — [TODO: describe the imagery approach] — were chosen to make the data feel lived-in rather than abstracted.
+The design problem with public health data is that the numbers are too large to feel real. 80,000 overdose deaths in a year is a statistic. It lands differently as a visual argument. The editorial goal was to find a graphic language that made the scale visceral — naturalistic rather than clinical, impossible to skim past.
 
-<Image src={cover} alt="High Enough? — cover" />
+The title is a rhetorical question aimed directly at the viewer: at what point is the death toll high enough to change behavior? It's not answered. The data is the answer.
+
+{/* TODO — 1–2 sentences on the specific data sources and editorial scope. Was this a single poster or a series? A zine? Clarify the physical format so a reader understands what the artifact actually is. */}
+
+## Approach
+
+### Visual Language
+
+The naturalistic graphics — [*TODO: describe the specific imagery choices, e.g. the needle illustration, the organic/botanical visual approach*] — were a deliberate departure from the clinical bar-chart conventions of public health communication. The goal was to make the data feel lived-in, not abstracted.
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0;">
+  <Image src={cover} alt="High Enough? — cover" />
+  <Image src={needle} alt="High Enough? — data visualization graphic" />
+</div>
 
 ### Data Visualization
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 2rem 0;">
-  <Image src={needle} alt="High Enough? — data visualization graphic" />
-  <Image src={poster} alt="High Enough? — poster spread" />
-</div>
+The central visualization maps [*TODO: describe what the visualization actually shows — overdose deaths by year, by state, by substance? The specific data shape and what decisions you made in rendering it*].
+
+<Image src={poster} alt="High Enough? — full poster" />
 
 ### Print Applications
 
@@ -62,9 +54,11 @@ The title itself is rhetorical: at what point is the death toll "high enough" to
 
 ## Outcome
 
-[TODO: Was this printed and distributed? Exhibited? Submitted to competitions? Any press or response?]
+This project was a precursor, not an endpoint. The questions it raised — why people don't act on data they know is real, and what a designer's actual responsibility is in the face of it — led directly to *The Fix*.
+
+{/* TODO — Was this shown, printed, or submitted anywhere? Any critique feedback worth noting? */}
 
 ## Credits
 
-Design: Nate Schiffler
-[TODO: Any data sources, photographers, or contributors to credit?]
+Design — Nate Schiffler  
+{/* TODO — Data sources to credit? */}

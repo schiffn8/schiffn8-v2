@@ -1,64 +1,90 @@
 ---
 title: "MORA"
 year: 2024
-role: "Designer"
-tags: ["Brand", "Identity", "Cultural"]
-summary: "A rebranding concept for The Museum of Russian Art in Minneapolis — minimal, sophisticated, and built to reframe the institution's cultural role."
+role: "Designer, UX"
+tags: ["Brand", "Identity", "UX", "Cultural"]
+summary: "A full identity and digital product system for The Museum of Russian Art in Minneapolis — brand through interactive prototype."
 hero: "./images/hero.jpg"
 thumb: "./images/thumb.png"
 order: 4
 featured: false
 draft: false
+links:
+  - label: "Interactive Prototype"
+    url: "https://www.figma.com/proto/YP0bc3G6IlIsbquSOVsZwg/Mora?node-id=143-3841&t=TP8i6Y4LdXRaQ66K-1"
 ---
-
-{/* TODO — METADATA
-    Note: The project slug is "mora" but the project is The Museum of Russian Art
-    (not the city of Mora, MN). MORA = Museum Of Russian Art.
-    Confirm: year, role, status (concept rebranding? commissioned?), and whether
-    you have rights to show this kind of institutional rebranding concept.
-    Also note: there is ALSO a UI/UX version of this project at /uiux/project-one-ephnc-rfyzj
-    with a Figma prototype. Should that be folded into this case study or treated separately?
-*/}
-
-## Context
-
-The Museum of Russian Art (MORA) is an independent institution in Minneapolis dedicated to Russian art, culture, and history — spanning Muscovite Russia, the Russian Empire, the Soviet Union, and its successor states.
-
-The rebranding challenge was fundamentally one of perception: MORA's existing identity undersold the institution. The museum holds serious work and serves a genuine curatorial mission, but its visual presence communicated neither.
-
-The brief was to create an identity that could hold its own alongside peer institutions — minimal, typographically rigorous, and confident enough to let the art lead.
-
-[TODO: Was this a class project, a personal rebranding exercise, or actual client work? That framing changes the narrative. Also: what did your research into MORA's programming reveal about the positioning problem?]
-
-## Approach
 
 import { Image } from 'astro:assets';
 import type_ from './images/01-type.png';
 import posterWall from './images/02-poster-wall.jpg';
 import gridMock from './images/03-grid-mock.jpg';
+import uxCover from './images/ux-01-cover.png';
+import uxResearch from './images/ux-02-research.png';
+import uxWireframes from './images/ux-03-wireframes.png';
+import uxScreens from './images/ux-04-screens.png';
+import uxScreens2 from './images/ux-05-screens-2.png';
+import uxFinal from './images/ux-07-final.png';
+
+## Context
+
+The Museum of Russian Art (MORA) is an independent institution in Minneapolis — one of the few museums in the United States dedicated to Russian art spanning Muscovite Russia through the Soviet era and its successor states.
+
+The institution's mission is serious and the collection is significant. Its identity wasn't. The rebrand brief was to design a visual system — and then a digital product — that let the work lead, not the branding.
+
+This project covered the full stack: identity system through case study through interactive prototype. Both were completed as coursework; the UX component was developed using the Google UX Design Certificate framework.
+
+## Brand Identity
 
 ### Typography
 
-The wordmark is set in a weight that reads as institutional without being heavy. The "M" in MORA does double duty — it can stand alone as a brandmark or anchor the full wordmark.
-
-[TODO: Describe your typeface choice and why. What did the old identity look like, and what problem were you solving?]
+The identity anchors on typography. MORA — the acronym — is set as a wordmark that doubles as a brandmark: the letterforms are chosen and spaced so that the full name and the single initial work as independent marks at any scale.
 
 <Image src={type_} alt="MORA — wordmark and type system" />
 
+{/* TODO — 2–3 sentences on the typeface choice and what problem it solves vs. the previous identity. What does this typographic approach communicate about the institution that the old mark didn't? */}
+
 ### Poster System
 
-The poster series applies the identity to programming communications — an uninterrupted editorial grid, photography at full-bleed, minimal type. The goal was to feel like a museum that takes its programming seriously.
+The poster series applies the identity to programming communications. Full-bleed photography, minimal type, unbroken editorial grid. The goal was a visual language that a serious arts institution would actually use — not a museum that looks designed to look like a museum.
 
-<Image src={posterWall} alt="MORA — poster wall, brand applications" />
+<Image src={posterWall} alt="MORA — poster wall, exhibition programming applications" />
 
 <Image src={gridMock} alt="MORA — brand collateral grid" />
 
+---
+
+## Digital Product
+
+The second phase extended MORA's identity into a digital product — a mobile app for museum visitors. The brief: an experience that works as a companion during a visit and as a discovery tool before it.
+
+### Research
+
+<Image src={uxCover} alt="MORA — UX case study overview" />
+
+<Image src={uxResearch} alt="MORA — user research and problem framing" />
+
+{/* TODO — 2–3 sentences on your research process and key findings. Who were the target users? What did you learn that shaped the design direction? */}
+
+### Wireframes and Iteration
+
+<Image src={uxWireframes} alt="MORA — wireframes" />
+
+<Image src={uxScreens} alt="MORA — UI screens, first iteration" />
+
+<Image src={uxScreens2} alt="MORA — UI screens, refined" />
+
+### Final Prototype
+
+<Image src={uxFinal} alt="MORA — final UI screens" />
+
+The final prototype is interactive — [try it here](https://www.figma.com/proto/YP0bc3G6IlIsbquSOVsZwg/Mora?node-id=143-3841&t=TP8i6Y4LdXRaQ66K-1).
+
 ## Outcome
 
-[TODO: Any presentation, critique feedback, or response from the institution?
-If this was coursework, what was the academic context?]
+Coursework — brand and UX developed as linked projects in the same year. The dual-track nature of the project (identity → digital product) was intentional: a museum identity that only lives on paper doesn't solve the right problem.
+
+{/* TODO — Any specific critique feedback? Did the brand and UX projects share a review, or were they evaluated separately? */}
 
 ## Credits
 
-Design: Nate Schiffler
-[TODO: Any other contributors or faculty advisors?]
+Design, UX — Nate Schiffler

@@ -13,7 +13,9 @@
       "Bash(npm run *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "WebFetch(domain:schiffn8design.com)"
+      "WebFetch(domain:schiffn8design.com)",
+      "WebSearch",
+      "WebFetch(domain:crwflags.com)"
     ]
   }
 }
