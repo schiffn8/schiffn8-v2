@@ -1,18 +1,18 @@
 ---
 const navLinks = [
-  { label: 'Work', href: '/work' },
-  { label: 'About', href: '/about' },
+  { label: 'Work',    href: '/work' },
+  { label: 'About',   href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
 
 const currentPath = Astro.url.pathname;
 ---
 
-<nav class="site-nav font-mono" aria-label="Site navigation">
-  <a href="/" class="site-nav__logo" aria-label="Nate Schiffler — Home">
+<nav class="site-nav" aria-label="Site navigation">
+  <a href="/" class="site-nav__logo font-mono" aria-label="Nate Schiffler — Home">
     NS
   </a>
-  <ul class="site-nav__links" role="list">
+  <ul class="site-nav__links font-mono" role="list">
     {navLinks.map((link) => (
       <li>
         <a
@@ -32,37 +32,40 @@ const currentPath = Astro.url.pathname;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem 2rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
+    padding: var(--space-6) var(--gutter);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-mono);
     text-transform: uppercase;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--line);
     position: sticky;
     top: 0;
-    background-color: var(--color-paper);
+    background-color: var(--paper);
     z-index: 100;
   }
 
   .site-nav__logo {
     font-weight: 500;
-    color: var(--color-ink);
+    color: var(--ink);
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+
+  .site-nav__logo:hover {
+    opacity: 0.6;
   }
 
   .site-nav__links {
     display: flex;
-    gap: 2rem;
+    gap: var(--space-8);
     list-style: none;
-    margin: 0;
-    padding: 0;
   }
 
   .site-nav__link {
-    color: var(--color-muted);
-    transition: color var(--transition-base);
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease-out);
   }
 
   .site-nav__link:hover,
   .site-nav__link.is-active {
-    color: var(--color-ink);
+    color: var(--ink);
   }
 </style>

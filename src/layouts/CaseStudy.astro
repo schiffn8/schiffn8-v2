@@ -1,5 +1,6 @@
 ---
 import Base from './Base.astro';
+import SpecBlock from '../components/SpecBlock.astro';
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 
@@ -9,69 +10,126 @@ interface Props {
 
 const { project } = Astro.props;
 const { title, summary, role, year, client, tags, hero } = project.data;
+
+const specRows = [
+  { label: 'Role', value: role },
+  { label: 'Year', value: String(year) },
+  ...(client ? [{ label: 'Client', value: client }] : []),
+  { label: 'Category', value: tags.join(', ') },
+];
 ---
 
 <Base title={title} description={summary}>
   <article class="case-study">
+
+    <!-- Header: title → summary → spec block (no hero image yet) -->
     <header class="case-study__header">
-      <div class="case-study__meta">
-        <span class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;">
-          {tags.join(' · ')}
-        </span>
-      </div>
-      <h1 class="case-study__title font-display" style="font-size: clamp(3rem, 8vw, 7rem);">
+      <p class="case-study__kicker label">
+        {tags[0]}
+      </p>
+      <h1 class="case-study__title font-display">
         {title}
       </h1>
-      <p class="case-study__summary" style="max-width: 55ch; font-size: 1.125rem; line-height: 1.6; color: var(--color-muted);">
+      <p class="case-study__summary">
         {summary}
       </p>
-      <dl class="spec-block font-mono" style="display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 2rem; font-size: 0.75rem; margin-top: 2rem;">
-        <dt style="color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em;">Role</dt>
-        <dd>{role}</dd>
-        <dt style="color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em;">Year</dt>
-        <dd>{year}</dd>
-        {client && (
-          <>
-            <dt style="color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.1em;">Client</dt>
-            <dd>{client}</dd>
-          </>
-        )}
-      </dl>
+      <div class="case-study__spec">
+        <SpecBlock rows={specRows} />
+      </div>
     </header>
 
-    <div class="case-study__hero" style="margin: 4rem 0; overflow: hidden;">
+    <!-- Hero: full-bleed, mask-reveals in motion-patterns skill -->
+    <div class="case-study__hero">
       <Image
         src={hero}
-        alt={`${title} hero image`}
+        alt={`${title} — hero`}
         widths={[800, 1200, 1600, 2000]}
         sizes="100vw"
-        style="width: 100%; height: 60vh; object-fit: cover;"
+        class="case-study__hero-img"
       />
     </div>
 
-    <div class="case-study__body prose" style="max-width: 72ch; margin: 0 auto; padding: 0 var(--space-md);">
+    <!-- Body prose -->
+    <div class="case-study__body prose">
       <slot />
     </div>
+
   </article>
 </Base>
 
 <style>
   .case-study__header {
-    padding: var(--space-xl) var(--space-md) var(--space-lg);
-    max-width: 1200px;
+    padding: var(--space-32) var(--gutter) var(--space-16);
+    max-width: var(--max-w-wide);
     margin: 0 auto;
   }
 
+  .case-study__kicker {
+    margin-bottom: var(--space-6);
+  }
+
+  .case-study__title {
+    font-size: var(--text-display);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-6);
+    max-width: 18ch;
+  }
+
+  .case-study__summary {
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    color: var(--muted);
+    max-width: 52ch;
+    margin-bottom: var(--space-12);
+  }
+
+  .case-study__spec {
+    max-width: 480px;
+  }
+
+  .case-study__hero {
+    overflow: hidden;
+    margin-bottom: var(--space-24);
+  }
+
+  .case-study__hero-img {
+    width: 100%;
+    height: 70vh;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  .case-study__body {
+    max-width: var(--max-w-prose);
+    margin: 0 auto;
+    padding: 0 var(--gutter) var(--space-32);
+  }
+
+  /* Prose typography */
   .prose :global(h2) {
     font-family: var(--font-display);
-    font-size: 2rem;
-    margin-top: 3rem;
-    margin-bottom: 1rem;
+    font-size: var(--text-2xl);
+    letter-spacing: var(--tracking-display);
+    margin-top: var(--space-24);
+    margin-bottom: var(--space-8);
+  }
+
+  .prose :global(h3) {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    letter-spacing: var(--tracking-heading);
+    margin-top: var(--space-16);
+    margin-bottom: var(--space-6);
   }
 
   .prose :global(p) {
-    line-height: 1.7;
-    margin-bottom: 1.5rem;
-    color: var(--color-ink);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+    color: var(--ink);
+  }
+
+  .prose :global(p + p) {
+    margin-top: var(--space-4);
   }
 </style>

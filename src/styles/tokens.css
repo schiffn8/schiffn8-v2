@@ -1,34 +1,105 @@
-/* Design tokens — populated by design-system skill */
-:root {
-  --color-ink: #1a1814;
-  --color-paper: #f5f2ed;
-  --color-accent: #ff4f00;
-  --color-muted: #6b6660;
-  --color-border: #e0dbd4;
+/* === MISSION CONTROL DESIGN TOKENS ===
+   Modeled on the editorial discipline of Apple, SpaceX, NASA.
+   Confident display type. Technical metadata treatment.
+   Signal-orange accent, used once per page. No gradients. No shadows.
+   Flat hierarchy — scale and weight do the work.
+*/
 
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-
-  --space-xs: 0.5rem;
-  --space-sm: 1rem;
-  --space-md: 2rem;
-  --space-lg: 4rem;
-  --space-xl: 8rem;
-
-  --radius-sm: 2px;
-  --radius-md: 4px;
-
-  --transition-base: 200ms ease;
-  --transition-slow: 400ms ease;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer tokens {
   :root {
-    --color-ink: #f0ece6;
-    --color-paper: #141210;
-    --color-accent: #ff6020;
-    --color-muted: #9b9590;
-    --color-border: #2a2825;
+    /* Type faces */
+    --font-display: 'Fraunces Variable', Georgia, serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+    /* Type scale — fluid, clamp-based */
+    --text-xs:      clamp(0.65rem,  0.6rem  + 0.2vw,  0.75rem);
+    --text-sm:      clamp(0.8rem,   0.75rem + 0.2vw,  0.875rem);
+    --text-base:    clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+    --text-lg:      clamp(1.25rem,  1.1rem  + 0.6vw,  1.5rem);
+    --text-xl:      clamp(1.75rem,  1.4rem  + 1.5vw,  2.5rem);
+    --text-2xl:     clamp(2.5rem,   1.8rem  + 3vw,    4rem);
+    --text-3xl:     clamp(3.5rem,   2.5rem  + 4vw,    6rem);
+    --text-display: clamp(4rem,     3rem    + 7vw,    10rem);
+
+    /* Line heights */
+    --leading-tight:   1.05;
+    --leading-snug:    1.25;
+    --leading-normal:  1.5;
+    --leading-relaxed: 1.65;  /* editorial body — not UI-default */
+
+    /* Letter spacing */
+    --tracking-display: -0.03em;   /* tight, confident */
+    --tracking-heading: -0.02em;
+    --tracking-mono:     0.08em;   /* spec-sheet feel */
+    --tracking-label:    0.1em;    /* uppercase labels */
+
+    /* Color — light mode */
+    --ink:          #0a0a0a;
+    --paper:        #fafaf7;   /* warm off-white */
+    --muted:        #6b6b68;
+    --line:         #d9d9d4;   /* hairline dividers — never bolder than 1px */
+    --accent:       #ff4500;   /* signal orange — used ONCE per page */
+    --accent-muted: #ffeae0;
+
+    /* Backward-compat aliases (used by existing components) */
+    --color-ink:    var(--ink);
+    --color-paper:  var(--paper);
+    --color-muted:  var(--muted);
+    --color-border: var(--line);
+    --color-accent: var(--accent);
+
+    /* Spacing — 8px base, exponential */
+    --space-1:  0.25rem;
+    --space-2:  0.5rem;
+    --space-3:  0.75rem;
+    --space-4:  1rem;
+    --space-6:  1.5rem;
+    --space-8:  2rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-24: 6rem;
+    --space-32: 8rem;
+
+    /* Backward-compat spacing aliases */
+    --space-xs: var(--space-2);
+    --space-sm: var(--space-4);
+    --space-md: var(--space-8);
+    --space-lg: var(--space-16);
+    --space-xl: var(--space-32);
+
+    /* Layout */
+    --max-w-prose: 62ch;
+    --max-w-wide:  1400px;
+    --gutter:      clamp(1.25rem, 4vw, 3rem);
+
+    /* Radius — MC: max 4px. Never round images. */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 4px;
+
+    /* Motion — cinematic, not playful */
+    --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);    /* fast out — entrances */
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --dur-fast:  200ms;
+    --dur-base:  400ms;   /* MC: cinematic base, not snappy UI 200ms */
+    --dur-slow:  800ms;   /* hero moments */
+    --dur-scroll: 1200ms; /* scroll-linked */
+
+    /* Backward-compat transition aliases */
+    --transition-base: var(--dur-fast) var(--ease-out);
+    --transition-slow: var(--dur-base) var(--ease-out);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* SpaceX/NASA nighttime counterpart */
+      --ink:          #f5f5f2;
+      --paper:        #0a0a0a;
+      --muted:        #8a8a85;
+      --line:         #1f1f1d;
+      --accent:       #ff5a1f;  /* slightly brighter for dark-bg contrast */
+      --accent-muted: #3a1c0f;
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { fadeUp, staggerChildren } from '../../lib/motion';
+import { heroReveal, staggerChildren, fadeUp } from '../../lib/motion';
 
 interface HeroProps {
   kicker?: string;
@@ -7,31 +7,42 @@ interface HeroProps {
   subline?: string;
 }
 
-export default function Hero({ kicker = 'Nate Schiffler — Design', headline, subline }: HeroProps) {
+export default function Hero({
+  kicker = 'Nate Schiffler — Design',
+  headline,
+  subline,
+}: HeroProps) {
   return (
     <section
       style={{
         height: '100dvh',
         display: 'grid',
         gridTemplateRows: 'auto 1fr auto',
-        padding: '1.5rem 2rem',
+        padding: 'var(--space-8) var(--gutter)',
+        maxWidth: 'var(--max-w-wide)',
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
       }}
     >
+      {/* Top — kicker */}
       <motion.p
         variants={fadeUp}
         initial="hidden"
         animate="visible"
         style={{
           fontFamily: 'var(--font-mono)',
-          fontSize: '0.7rem',
-          letterSpacing: '0.1em',
+          fontSize: 'var(--text-xs)',
+          letterSpacing: 'var(--tracking-label)',
           textTransform: 'uppercase',
-          color: 'var(--color-muted)',
+          color: 'var(--muted)',
+          paddingTop: 'var(--space-4)',
         }}
       >
         {kicker}
       </motion.p>
 
+      {/* Center — ONE massive headline */}
       <motion.div
         variants={staggerChildren}
         initial="hidden"
@@ -39,13 +50,13 @@ export default function Hero({ kicker = 'Nate Schiffler — Design', headline, s
         style={{ display: 'flex', alignItems: 'center' }}
       >
         <motion.h1
-          variants={fadeUp}
+          variants={heroReveal}
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(3.5rem, 9vw, 9rem)',
+            fontSize: 'var(--text-display)',
             fontWeight: 400,
-            lineHeight: 1.0,
-            letterSpacing: '-0.03em',
+            lineHeight: 'var(--leading-tight)',
+            letterSpacing: 'var(--tracking-display)',
             maxWidth: '16ch',
             margin: 0,
           }}
@@ -54,6 +65,7 @@ export default function Hero({ kicker = 'Nate Schiffler — Design', headline, s
         </motion.h1>
       </motion.div>
 
+      {/* Bottom — subline left, index right */}
       <motion.div
         variants={staggerChildren}
         initial="hidden"
@@ -62,7 +74,8 @@ export default function Hero({ kicker = 'Nate Schiffler — Design', headline, s
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-end',
-          gap: '2rem',
+          gap: 'var(--space-8)',
+          paddingBottom: 'var(--space-4)',
         }}
       >
         {subline && (
@@ -70,9 +83,10 @@ export default function Hero({ kicker = 'Nate Schiffler — Design', headline, s
             variants={fadeUp}
             style={{
               maxWidth: '42ch',
-              lineHeight: 1.6,
-              color: 'var(--color-muted)',
+              lineHeight: 'var(--leading-relaxed)',
+              color: 'var(--muted)',
               margin: 0,
+              fontSize: 'var(--text-base)',
             }}
           >
             {subline}
@@ -82,10 +96,10 @@ export default function Hero({ kicker = 'Nate Schiffler — Design', headline, s
           variants={fadeUp}
           style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.7rem',
-            letterSpacing: '0.1em',
+            fontSize: 'var(--text-xs)',
+            letterSpacing: 'var(--tracking-mono)',
             textTransform: 'uppercase',
-            color: 'var(--color-muted)',
+            color: 'var(--muted)',
             whiteSpace: 'nowrap',
             margin: 0,
           }}

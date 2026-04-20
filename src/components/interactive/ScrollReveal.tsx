@@ -5,9 +5,10 @@ import { fadeUp } from '../../lib/motion';
 interface ScrollRevealProps {
   children: React.ReactNode;
   delay?: number;
+  className?: string;
 }
 
-export default function ScrollReveal({ children, delay = 0 }: ScrollRevealProps) {
+export default function ScrollReveal({ children, delay = 0, className }: ScrollRevealProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
 
@@ -17,7 +18,8 @@ export default function ScrollReveal({ children, delay = 0 }: ScrollRevealProps)
       variants={fadeUp}
       initial="hidden"
       animate={isInView ? 'visible' : 'hidden'}
-      style={{ transitionDelay: `${delay}ms` }}
+      transition={{ delay: delay / 1000 }}
+      className={className}
     >
       {children}
     </motion.div>

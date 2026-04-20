@@ -11,63 +11,154 @@ const featured = allProjects
 ---
 
 <Base title="Home">
+
+  <!-- Section 1: Hero (100vh) -->
   <Hero
     client:load
     headline="Design systems for teams shipping real things."
     subline="Brand, product, and motion — built to function intelligently."
   />
 
+  <!-- Section 2: Selected work grid -->
   {featured.length > 0 && (
-    <section style="padding: var(--space-xl) var(--space-md);">
-      <div style="max-width: 1200px; margin: 0 auto;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-lg);">
-          <h2 class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin: 0;">
-            Selected Work
-          </h2>
-          <a href="/work" class="font-mono text-muted" style="font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color var(--transition-base);">
-            All Work →
-          </a>
+    <section class="section-work">
+      <div class="container">
+        <div class="section-work__header">
+          <h2 class="label">Selected Work</h2>
+          <a href="/work" class="section-work__all label">All Work →</a>
         </div>
         <ProjectGrid projects={featured} />
       </div>
     </section>
   )}
 
-  <section style="padding: var(--space-xl) var(--space-md); border-top: 1px solid var(--color-border);">
-    <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
-      <div>
-        <p style="line-height: 1.7; margin-bottom: 1.5rem;">
+  <!-- Section 3: Practice + capabilities -->
+  <section class="section-about">
+    <div class="container section-about__grid">
+      <div class="section-about__bio">
+        <p>
           I build cohesive visual identities, strategic brand systems, and high-impact digital
           experiences that translate complex ideas into clear, compelling narratives.
         </p>
-        <p style="line-height: 1.7; color: var(--color-muted);">
+        <p style="margin-top: var(--space-6); color: var(--muted);">
           My work blends creative direction with technical execution, integrating AI-driven
           workflows to accelerate ideation, expand visual range, and modernize production.
         </p>
       </div>
-      <dl class="font-mono" style="font-size: 0.75rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.75rem 2rem; align-content: start;">
-        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Brand</dt>
-        <dd style="color: var(--color-ink);">Identity systems, campaigns</dd>
-        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Product</dt>
-        <dd style="color: var(--color-ink);">UI/UX, motion, prototyping</dd>
-        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">AI-Assisted</dt>
-        <dd style="color: var(--color-ink);">Workflow integration, asset generation</dd>
-        <dt style="text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-muted);">Physical</dt>
-        <dd style="color: var(--color-ink);">Exhibition, packaging, apparel</dd>
+      <dl class="section-about__capabilities font-mono">
+        <dt class="label">Brand</dt>
+        <dd>Identity systems, campaigns</dd>
+        <dt class="label">Product</dt>
+        <dd>UI/UX, motion, prototyping</dd>
+        <dt class="label">AI-Assisted</dt>
+        <dd>Workflow integration, asset generation</dd>
+        <dt class="label">Physical</dt>
+        <dd>Exhibition, packaging, apparel</dd>
       </dl>
     </div>
   </section>
 
-  <section style="padding: var(--space-xl) var(--space-md); border-top: 1px solid var(--color-border);">
-    <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
-      <p class="font-display" style="font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: -0.02em; margin-bottom: 2rem;">
-        Open to new work.
-      </p>
-      <div class="font-mono" style="display: flex; gap: 2rem; justify-content: center; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted);">
-        <a href="mailto:hello@schiffn8design.com">Email</a>
-        <a href="https://linkedin.com/in/nateschiffler" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="/contact">Contact →</a>
+  <!-- Section 4: Contact -->
+  <section class="section-contact">
+    <div class="container">
+      <p class="section-contact__headline font-display">Open to new work.</p>
+      <div class="section-contact__links font-mono">
+        <a href="mailto:hello@schiffn8design.com" class="section-contact__link">Email</a>
+        <a href="https://linkedin.com/in/nateschiffler" target="_blank" rel="noopener" class="section-contact__link">LinkedIn</a>
+        <a href="/contact" class="section-contact__link">Contact →</a>
       </div>
     </div>
   </section>
+
 </Base>
+
+<style>
+  .container {
+    max-width: var(--max-w-wide);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  .section-work {
+    padding: var(--space-32) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .section-work__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--space-16);
+  }
+
+  .section-work__all {
+    transition: color var(--dur-fast) var(--ease-out);
+    color: var(--muted);
+  }
+  .section-work__all:hover { color: var(--ink); }
+
+  .section-about {
+    padding: var(--space-32) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .section-about__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-32);
+    align-items: start;
+  }
+
+  .section-about__bio p {
+    line-height: var(--leading-relaxed);
+    max-width: 52ch;
+  }
+
+  .section-about__capabilities {
+    font-size: var(--text-xs);
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-3) var(--space-8);
+    align-content: start;
+  }
+
+  .section-about__capabilities dd {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+    letter-spacing: 0;
+  }
+
+  .section-contact {
+    padding: var(--space-32) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .section-contact__headline {
+    font-size: var(--text-3xl);
+    letter-spacing: var(--tracking-display);
+    margin-bottom: var(--space-8);
+    max-width: none;
+  }
+
+  .section-contact__links {
+    display: flex;
+    gap: var(--space-8);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-mono);
+    text-transform: uppercase;
+  }
+
+  .section-contact__link {
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .section-contact__link:hover { color: var(--ink); }
+
+  @media (max-width: 768px) {
+    .section-about__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-16);
+    }
+  }
+</style>

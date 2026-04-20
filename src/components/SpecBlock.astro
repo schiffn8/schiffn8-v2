@@ -1,0 +1,58 @@
+---
+interface SpecRow {
+  label: string;
+  value: string;
+}
+
+interface Props {
+  rows: SpecRow[];
+}
+
+const { rows } = Astro.props;
+---
+
+<!--
+  The Mission Control spec block.
+  Left col: mono-uppercase labels in muted.
+  Right col: sans values in ink.
+  Each row separated by a 1px hairline.
+  This is the single most identifiable aesthetic move — apply it to every case study header.
+-->
+<dl class="spec-block font-mono">
+  {rows.map(({ label, value }) => (
+    <>
+      <dt class="spec-block__label">{label}</dt>
+      <dd class="spec-block__value">{value}</dd>
+    </>
+  ))}
+</dl>
+
+<style>
+  .spec-block {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    font-size: var(--text-xs);
+    border-top: 1px solid var(--line);
+  }
+
+  .spec-block__label,
+  .spec-block__value {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .spec-block__label {
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-right: 2.5rem;
+    font-family: var(--font-mono);
+  }
+
+  .spec-block__value {
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0;
+  }
+</style>
