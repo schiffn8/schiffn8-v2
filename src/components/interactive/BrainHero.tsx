@@ -136,12 +136,11 @@ export default function BrainHero({ thumbs = [] }: Props) {
       {/* Layer 1 — raining project images (design zone only) */}
       <RainingImages images={thumbs} active={inDesign} />
 
-      {/* Layer 2 — brain video, fades to 0.5 opacity over design carousel */}
+      {/* Layer 2 — brain video, screen-blended so black bg is transparent */}
       <div
         style={{
           position: 'absolute', inset: 0,
-          opacity: inDesign ? 0.5 : 1,
-          transition: 'opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1)',
+          mixBlendMode: 'screen',
         }}
       >
         <MouseScrub
