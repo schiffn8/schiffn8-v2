@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import MouseScrub from './MouseScrub';
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Types & config ───────────────────────────────────────────────────────────
 
 type Zone = 'design' | 'ai' | 'astrion' | null;
 
@@ -9,12 +9,71 @@ const ROUTES = { design: '/work', ai: '/ai', astrion: '/astrion' } as const;
 const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const;
 
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
-// Poster: the AI brain (center frame) shown before video loads
 const POSTER_SRC = '/images/brain-ai.webp';
 
-// ─── Component ────────────────────────────────────────────────────────────────
+const CAROUSEL_INTERVAL = 2800; // ms per slide
 
-export default function BrainHero() {
+// ─── Background carousel ─────────────────────────────────────────────────────
+
+function DesignCarousel({ images, visible }: { images: string[]; visible: boolean }) {
+  const [idx, setIdx] = useState(0);
+
+  // Always cycling — feels "live" when the design zone is entered mid-cycle
+  useEffect(() => {
+    if (images.length < 2) return;
+    const id = setInterval(
+      () => setIdx(i => (i + 1) % images.length),
+      CAROUSEL_INTERVAL
+    );
+    return () => clearInterval(id);
+  }, [images.length]);
+
+  return (
+    <div
+      style={{
+        position: 'absolute', inset: 0, overflow: 'hidden',
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 1s cubic-bezier(0.22, 1, 0.36, 1)',
+      }}
+    >
+      {images.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt=""
+          aria-hidden="true"
+          loading={i === 0 ? 'eager' : 'lazy'}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            opacity: i === idx ? 1 : 0,
+            transition: 'opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1)',
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+
+      {/* Subtle dark vignette so project images don't overpower the brain */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.55) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+interface Props {
+  thumbs?: string[];
+}
+
+export default function BrainHero({ thumbs = [] }: Props) {
   const [zone,   setZone]   = useState<Zone>(null);
   const [labels, setLabels] = useState({ design: 0, ai: 0, astrion: 0 });
 
@@ -40,6 +99,8 @@ export default function BrainHero() {
     if (zone) window.location.href = ROUTES[zone];
   }, [zone]);
 
+  const inDesign = zone === 'design';
+
   return (
     <div
       style={{
@@ -50,15 +111,26 @@ export default function BrainHero() {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Video scrub — mouse X drives currentTime */}
-      <MouseScrub
-        src={VIDEO_SRC}
-        poster={POSTER_SRC}
-        onMouseX={handleMouseX}
-        onMouseLeave={handleMouseLeave}
-      />
+      {/* Layer 1: design project carousel (behind brain) */}
+      <DesignCarousel images={thumbs} visible={inDesign} />
 
-      {/* Zone labels — fade in on hover */}
+      {/* Layer 2: brain video — fades transparent over carousel in design zone */}
+      <div
+        style={{
+          position: 'absolute', inset: 0,
+          opacity: inDesign ? 0.28 : 1,
+          transition: 'opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+      >
+        <MouseScrub
+          src={VIDEO_SRC}
+          poster={POSTER_SRC}
+          onMouseX={handleMouseX}
+          onMouseLeave={handleMouseLeave}
+        />
+      </div>
+
+      {/* Layer 3: zone labels */}
       <div
         aria-hidden="true"
         style={{

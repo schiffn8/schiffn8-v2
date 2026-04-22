@@ -1,11 +1,22 @@
 ---
 import FullBleed from '../layouts/FullBleed.astro';
 import BrainHero from '../components/interactive/BrainHero';
+import { getCollection } from 'astro:content';
+import { getImage } from 'astro:assets';
+
+// Fetch design project thumbnails — passed to the hero carousel
+const projects = await getCollection('projects', ({ data }) => !data.draft);
+const sorted   = projects.sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+
+const thumbs = await Promise.all(
+  sorted.map(p => getImage({ src: p.data.thumb, width: 1400, format: 'webp' }))
+);
+const thumbSrcs = thumbs.map(t => t.src);
 ---
 
 <FullBleed
   title="Nate Schiffler"
   description="Design. AI. Astrion. — Portfolio of Nate Schiffler."
 >
-  <BrainHero client:load />
+  <BrainHero client:load thumbs={thumbSrcs} />
 </FullBleed>
