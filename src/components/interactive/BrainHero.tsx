@@ -11,58 +11,85 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
-const CAROUSEL_INTERVAL = 2800; // ms per slide
+const SPAWN_INTERVAL = 1400;  // ms between each new drop
+const DROP_DURATION  = 3600;  // ms for full top→bottom fall
+const COLS           = 6;
+const COL_W          = 100 / COLS;   // 16.67vw per column
+const IMG_W          = COL_W * 0.72; // ~12vw — narrower than 1/6 viewport ✓
 
-// ─── Background carousel ─────────────────────────────────────────────────────
+// ─── Raining project images ───────────────────────────────────────────────────
 
-function DesignCarousel({ images, visible }: { images: string[]; visible: boolean }) {
-  const [idx, setIdx] = useState(0);
+interface Drop {
+  id:       number;
+  src:      string;
+  col:      number;   // 0–5
+  xJitter:  number;   // vw offset within column for variation
+  duration: number;   // ms — slight per-drop variation
+}
 
-  // Always cycling — feels "live" when the design zone is entered mid-cycle
+function RainingImages({ images, active }: { images: string[]; active: boolean }) {
+  const [drops, setDrops]   = useState<Drop[]>([]);
+  const nextId   = useRef(0);
+  const nextCol  = useRef(0);
+  const nextImg  = useRef(0);
+
   useEffect(() => {
-    if (images.length < 2) return;
-    const id = setInterval(
-      () => setIdx(i => (i + 1) % images.length),
-      CAROUSEL_INTERVAL
-    );
-    return () => clearInterval(id);
-  }, [images.length]);
+    if (!active || images.length === 0) return;
+
+    const spawn = () => {
+      const col      = nextCol.current % COLS;
+      const imgIdx   = nextImg.current % images.length;
+      const id       = nextId.current;
+      const duration = DROP_DURATION + (Math.random() - 0.5) * 800; // ±400ms variety
+      const xJitter  = (Math.random() - 0.5) * 3;                   // ±1.5vw lateral jitter
+
+      nextCol.current++;
+      nextImg.current++;
+      nextId.current++;
+
+      setDrops(prev => [...prev, { id, src: images[imgIdx], col, xJitter, duration }]);
+
+      // Remove after animation finishes
+      setTimeout(() => {
+        setDrops(prev => prev.filter(d => d.id !== id));
+      }, duration + 100);
+    };
+
+    spawn(); // first drop immediately on zone entry
+    const interval = setInterval(spawn, SPAWN_INTERVAL);
+    return () => clearInterval(interval);
+  }, [active, images]);
+
+  if (drops.length === 0) return null;
 
   return (
     <div
-      style={{
-        position: 'absolute', inset: 0, overflow: 'hidden',
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 1s cubic-bezier(0.22, 1, 0.36, 1)',
-      }}
+      aria-hidden="true"
+      style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}
     >
-      {images.map((src, i) => (
-        <img
-          key={i}
-          src={src}
-          alt=""
-          aria-hidden="true"
-          loading={i === 0 ? 'eager' : 'lazy'}
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%',
-            objectFit: 'cover',
-            opacity: i === idx ? 1 : 0,
-            transition: 'opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1)',
-            pointerEvents: 'none',
-          }}
-        />
-      ))}
+      {drops.map(drop => {
+        // Center image within its column, then apply jitter
+        const leftVw = drop.col * COL_W + (COL_W - IMG_W) / 2 + drop.xJitter;
 
-      {/* Subtle dark vignette so project images don't overpower the brain */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.55) 100%)',
-          pointerEvents: 'none',
-        }}
-      />
+        return (
+          <img
+            key={drop.id}
+            src={drop.src}
+            alt=""
+            loading="lazy"
+            style={{
+              position:  'absolute',
+              top:       0,
+              left:      `${leftVw}vw`,
+              width:     `${IMG_W}vw`,
+              height:    'auto',
+              display:   'block',
+              animation: `rain-drop ${drop.duration}ms ease-in forwards`,
+              willChange: 'transform, opacity',
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -91,13 +118,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
     setLabels({ design: 0, ai: 0, astrion: 0 });
   }, []);
 
-  const handleClick = useCallback(() => {
-    if (zone) window.location.href = ROUTES[zone];
-  }, [zone]);
-
-  const handleTouchEnd = useCallback(() => {
-    if (zone) window.location.href = ROUTES[zone];
-  }, [zone]);
+  const handleClick    = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
+  const handleTouchEnd = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
 
   const inDesign = zone === 'design';
 
@@ -111,14 +133,14 @@ export default function BrainHero({ thumbs = [] }: Props) {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1: design project carousel (behind brain) */}
-      <DesignCarousel images={thumbs} visible={inDesign} />
+      {/* Layer 1 — raining project images (design zone only) */}
+      <RainingImages images={thumbs} active={inDesign} />
 
-      {/* Layer 2: brain video — fades transparent over carousel in design zone */}
+      {/* Layer 2 — brain video, fades to 0.5 opacity over design carousel */}
       <div
         style={{
           position: 'absolute', inset: 0,
-          opacity: inDesign ? 0.28 : 1,
+          opacity: inDesign ? 0.5 : 1,
           transition: 'opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
@@ -130,7 +152,7 @@ export default function BrainHero({ thumbs = [] }: Props) {
         />
       </div>
 
-      {/* Layer 3: zone labels */}
+      {/* Layer 3 — zone labels */}
       <div
         aria-hidden="true"
         style={{
