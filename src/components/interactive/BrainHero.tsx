@@ -65,18 +65,31 @@ function CursorBubble() {
 // one is visible. On settle: play from start and fade in. On leave: fade out
 // and pause. The brain scrub layer cross-fades with these via opacity.
 function ZoneVideo({ settledZone }: { settledZone: Zone }) {
-  const refs = useRef<Partial<Record<NonNullable<Zone>, HTMLVideoElement>>>({});
+  const refs     = useRef<Partial<Record<NonNullable<Zone>, HTMLVideoElement>>>({});
+  const cleanups = useRef<Partial<Record<NonNullable<Zone>, () => void>>>({});
 
   useEffect(() => {
     const zones = Object.keys(ZONE_VIDEOS) as NonNullable<Zone>[];
     zones.forEach((z) => {
       const vid = refs.current[z];
       if (!vid) return;
+
+      // Cancel any pending ended-listener from a previous transition
+      cleanups.current[z]?.();
+      cleanups.current[z] = undefined;
+
       if (z === settledZone) {
-        vid.currentTime = 0;
+        vid.loop         = true;
+        vid.playbackRate = 1;
+        vid.currentTime  = 0;
         vid.play().catch(() => {});
-      } else {
-        vid.pause();
+      } else if (!vid.paused) {
+        // Was playing — speed to end frame then stop
+        vid.loop         = false;
+        vid.playbackRate = 4;
+        const onEnded = () => { vid.pause(); cleanups.current[z] = undefined; };
+        vid.addEventListener('ended', onEnded, { once: true });
+        cleanups.current[z] = () => vid.removeEventListener('ended', onEnded);
       }
     });
   }, [settledZone]);
