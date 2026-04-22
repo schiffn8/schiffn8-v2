@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import SpecBlock from '../components/SpecBlock.astro';
+---
+
+<Base
+  title="AI"
+  description="AI-assisted design workflows and generative work by Nate Schiffler."
+>
+  <section class="section-ai">
+    <div class="container">
+      <header class="section-ai__header">
+        <p class="label section-ai__kicker">AI Work</p>
+        <h1 class="section-ai__title font-display">AI</h1>
+        <p class="section-ai__summary">
+          Generative workflows, AI-assisted ideation, and experimental tools — coming soon.
+        </p>
+      </header>
+
+      <SpecBlock rows={[
+        { label: 'Capabilities', value: 'Image gen, video gen, workflow integration' },
+        { label: 'Tools',        value: 'Midjourney, Runway, Kling, ComfyUI, Claude' },
+        { label: 'Status',       value: 'Building' },
+      ]} />
+
+      <a href="/" class="back-link label">← Back</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .section-ai {
+    padding: var(--space-32) 0;
+    min-height: 80dvh;
+    display: flex;
+    align-items: center;
+  }
+
+  .container {
+    max-width: var(--max-w-prose);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  .section-ai__kicker {
+    display: block;
+    margin-bottom: var(--space-4);
+  }
+
+  .section-ai__title {
+    font-size: var(--text-3xl);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-6);
+  }
+
+  .section-ai__summary {
+    font-size: var(--text-lg);
+    color: var(--muted);
+    max-width: 48ch;
+    margin-bottom: var(--space-12);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: var(--space-12);
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .back-link:hover { color: var(--ink); }
+</style>

@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import SpecBlock from '../components/SpecBlock.astro';
+---
+
+<Base
+  title="Astrion"
+  description="Astrion — aerospace and orbital design work by Nate Schiffler."
+>
+  <section class="section-astrion">
+    <div class="container">
+      <header class="section-astrion__header">
+        <p class="label section-astrion__kicker">Astrion</p>
+        <h1 class="section-astrion__title font-display">Astrion</h1>
+        <p class="section-astrion__summary">
+          Aerospace design, orbital systems, and the work at the edge of what ships — coming soon.
+        </p>
+      </header>
+
+      <SpecBlock rows={[
+        { label: 'Focus',  value: 'Aerospace, orbital, launch systems' },
+        { label: 'Status', value: 'Building' },
+      ]} />
+
+      <a href="/" class="back-link label">← Back</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .section-astrion {
+    padding: var(--space-32) 0;
+    min-height: 80dvh;
+    display: flex;
+    align-items: center;
+  }
+
+  .container {
+    max-width: var(--max-w-prose);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  .section-astrion__kicker {
+    display: block;
+    margin-bottom: var(--space-4);
+  }
+
+  .section-astrion__title {
+    font-size: var(--text-3xl);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-6);
+    color: #4488ff;
+  }
+
+  .section-astrion__summary {
+    font-size: var(--text-lg);
+    color: var(--muted);
+    max-width: 48ch;
+    margin-bottom: var(--space-12);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: var(--space-12);
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .back-link:hover { color: var(--ink); }
+</style>
