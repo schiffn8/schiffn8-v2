@@ -3,7 +3,8 @@ import MouseScrub from './MouseScrub';
 
 // ─── Types & config ───────────────────────────────────────────────────────────
 
-type Zone = 'design' | 'ai' | 'astrion' | null;
+type Zone      = 'design' | 'ai' | 'astrion' | null;
+type AnimPhase = 'scrubbing' | 'animating' | 'finishing';
 
 const ROUTES = { design: '/work', ai: '/ai', astrion: '/astrion' } as const;
 const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const;
@@ -11,16 +12,13 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
-// Drop your zone animation videos at these paths.
-// Each plays (looped, muted) when the cursor rests in that zone for 500ms,
-// replacing the frozen scrub frame. Use black-background + bright content
-// so mix-blend-mode:screen makes the black areas transparent, matching the
-// brain video layer.
 const ZONE_VIDEOS: Record<NonNullable<Zone>, string> = {
   design:  '/videos/zone-design.mp4',
   ai:      '/videos/zone-ai.mp4',
   astrion: '/videos/zone-astrion.mp4',
 };
+
+const SETTLE_MS = 1500;
 
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
@@ -61,38 +59,50 @@ function CursorBubble() {
 
 // ─── Zone animation videos ────────────────────────────────────────────────────
 
-// All three videos are kept in the DOM so they're buffered; only the active
-// one is visible. On settle: play from start and fade in. On leave: fade out
-// and pause. The brain scrub layer cross-fades with these via opacity.
-function ZoneVideo({ settledZone }: { settledZone: Zone }) {
-  const refs     = useRef<Partial<Record<NonNullable<Zone>, HTMLVideoElement>>>({});
-  const cleanups = useRef<Partial<Record<NonNullable<Zone>, () => void>>>({});
+// All three videos are pre-loaded in the DOM. On settle: play from start,
+// looping. On cursor move: disable loop so the current pass plays to its
+// natural end (no cuts, no skips), then fire onFinished to hand back to scrub.
 
+interface ZoneVideoProps {
+  activeZone: Zone;
+  finishing:  boolean;
+  onFinished: () => void;
+}
+
+function ZoneVideo({ activeZone, finishing, onFinished }: ZoneVideoProps) {
+  const refs = useRef<Partial<Record<NonNullable<Zone>, HTMLVideoElement>>>({});
+
+  // Manage playback state for each video
   useEffect(() => {
     const zones = Object.keys(ZONE_VIDEOS) as NonNullable<Zone>[];
     zones.forEach((z) => {
       const vid = refs.current[z];
       if (!vid) return;
-
-      // Cancel any pending ended-listener from a previous transition
-      cleanups.current[z]?.();
-      cleanups.current[z] = undefined;
-
-      if (z === settledZone) {
-        vid.loop         = true;
-        vid.playbackRate = 1;
-        vid.currentTime  = 0;
-        vid.play().catch(() => {});
-      } else if (!vid.paused) {
-        // Was playing — speed to end frame then stop
-        vid.loop         = false;
-        vid.playbackRate = 4;
-        const onEnded = () => { vid.pause(); cleanups.current[z] = undefined; };
-        vid.addEventListener('ended', onEnded, { once: true });
-        cleanups.current[z] = () => vid.removeEventListener('ended', onEnded);
+      if (z === activeZone) {
+        if (!finishing) {
+          vid.loop         = true;
+          vid.playbackRate = 1;
+          vid.currentTime  = 0;
+          vid.play().catch(() => {});
+        } else {
+          // Remove loop — current pass plays to end naturally, fires 'ended'
+          vid.loop = false;
+        }
+      } else {
+        vid.pause();
       }
     });
-  }, [settledZone]);
+  }, [activeZone, finishing]);
+
+  // Attach ended listener only while finishing so we know when to hand back
+  useEffect(() => {
+    if (!finishing || !activeZone) return;
+    const vid = refs.current[activeZone];
+    if (!vid) return;
+    const handleEnded = () => onFinished();
+    vid.addEventListener('ended', handleEnded, { once: true });
+    return () => vid.removeEventListener('ended', handleEnded);
+  }, [finishing, activeZone, onFinished]);
 
   return (
     <>
@@ -116,7 +126,7 @@ function ZoneVideo({ settledZone }: { settledZone: Zone }) {
             pointerEvents: 'none',
             mixBlendMode:  'screen',
             zIndex:        1,
-            opacity:       settledZone === z ? 1 : 0,
+            opacity:       activeZone === z ? 1 : 0,
             transition:    'opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         />
@@ -179,19 +189,28 @@ interface Props {
 }
 
 export default function BrainHero({ thumbs = [] }: Props) {
-  const [zone,        setZone]        = useState<Zone>(null);
-  const [settledZone, setSettledZone] = useState<Zone>(null);
-  const [labels,      setLabels]      = useState({ design: 0, ai: 0, astrion: 0 });
+  const [zone,       setZone]       = useState<Zone>(null);
+  const [activeZone, setActiveZone] = useState<Zone>(null);
+  const [phase,      setPhase]      = useState<AnimPhase>('scrubbing');
+  const [labels,     setLabels]     = useState({ design: 0, ai: 0, astrion: 0 });
   const cursorXRef = useRef<number>(0.5);
 
-  // Clear settled immediately on any zone change, then re-settle after 500ms of stillness.
-  // This ensures the animation video stops the moment the cursor moves.
+  // Settle timer — only runs while scrubbing. Resets whenever zone changes.
+  // Moving while animating cancels this and transitions to 'finishing' instead.
   useEffect(() => {
-    setSettledZone(null);
-    if (!zone) return;
-    const t = setTimeout(() => setSettledZone(zone), 500);
+    if (phase !== 'scrubbing' || !zone) return;
+    const t = setTimeout(() => {
+      setActiveZone(zone);
+      setPhase('animating');
+    }, SETTLE_MS);
     return () => clearTimeout(t);
-  }, [zone]);
+  }, [zone, phase]);
+
+  // Called by ZoneVideo when the finishing pass reaches its natural end
+  const handleAnimFinished = useCallback(() => {
+    setPhase('scrubbing');
+    setActiveZone(null);
+  }, []);
 
   const getZone = (nx: number): Zone =>
     nx < 0.33 ? 'design' : nx > 0.66 ? 'astrion' : 'ai';
@@ -203,12 +222,15 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const z = getZone(nx);
     setZone(z);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
+    // If animating, let the current video finish before handing back to scrub
+    setPhase(prev => prev === 'animating' ? 'finishing' : prev);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     cursorXRef.current = 0.5;
     setZone(null);
     setLabels({ design: 0, ai: 0, astrion: 0 });
+    setPhase(prev => prev === 'animating' ? 'finishing' : prev);
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -218,10 +240,13 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const z = getZone(nx);
     setZone(z);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
+    setPhase(prev => prev === 'animating' ? 'finishing' : prev);
   }, []);
 
   const handleClick    = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
   const handleTouchEnd = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
+
+  const showingAnimation = phase === 'animating' || phase === 'finishing';
 
   return (
     <div
@@ -236,7 +261,7 @@ export default function BrainHero({ thumbs = [] }: Props) {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1a — scrubbed brain (fades out when animation takes over) */}
+      {/* Layer 1a — scrubbed brain (hidden while zone animation plays) */}
       <div
         style={{
           position:      'absolute',
@@ -244,15 +269,19 @@ export default function BrainHero({ thumbs = [] }: Props) {
           mixBlendMode:  'screen',
           pointerEvents: 'none',
           zIndex:        1,
-          opacity:       settledZone ? 0 : 1,
+          opacity:       showingAnimation ? 0 : 1,
           transition:    'opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
         <MouseScrub src={VIDEO_SRC} poster={POSTER_SRC} cursorXRef={cursorXRef} />
       </div>
 
-      {/* Layer 1b — zone animation videos (fade in when settled, replace the scrub) */}
-      <ZoneVideo settledZone={settledZone} />
+      {/* Layer 1b — zone animation videos */}
+      <ZoneVideo
+        activeZone={activeZone}
+        finishing={phase === 'finishing'}
+        onFinished={handleAnimFinished}
+      />
 
       {/* Layer 2 — 2×3 project image grid (left third) */}
       <ProjectGrid images={thumbs} />
