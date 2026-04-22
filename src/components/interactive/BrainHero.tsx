@@ -11,6 +11,17 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
+// Drop your zone animation videos at these paths.
+// Each plays (looped, muted) when the cursor rests in that zone for 500ms,
+// replacing the frozen scrub frame. Use black-background + bright content
+// so mix-blend-mode:screen makes the black areas transparent, matching the
+// brain video layer.
+const ZONE_VIDEOS: Record<NonNullable<Zone>, string> = {
+  design:  '/videos/zone-design.mp4',
+  ai:      '/videos/zone-ai.mp4',
+  astrion: '/videos/zone-astrion.mp4',
+};
+
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
 function CursorBubble() {
@@ -48,50 +59,56 @@ function CursorBubble() {
   );
 }
 
-// ─── Zone pulse rings ─────────────────────────────────────────────────────────
+// ─── Zone animation videos ────────────────────────────────────────────────────
 
-// Expand-and-fade rings emanating from the brain center when cursor settles.
-// Three rings staggered 0 / 0.6 / 1.2s so the pulse reads as continuous.
-const ZONE_PULSE = {
-  design:  { color: '#ff6030', duration: '2.0s' },
-  ai:      { color: '#00e5ff', duration: '1.6s' },
-  astrion: { color: '#4488ff', duration: '2.2s' },
-} as const;
+// All three videos are kept in the DOM so they're buffered; only the active
+// one is visible. On settle: play from start and fade in. On leave: fade out
+// and pause. The brain scrub layer cross-fades with these via opacity.
+function ZoneVideo({ settledZone }: { settledZone: Zone }) {
+  const refs = useRef<Partial<Record<NonNullable<Zone>, HTMLVideoElement>>>({});
 
-function ZonePulse({ zone }: { zone: Zone }) {
-  if (!zone) return null;
-  const { color, duration } = ZONE_PULSE[zone];
+  useEffect(() => {
+    const zones = Object.keys(ZONE_VIDEOS) as NonNullable<Zone>[];
+    zones.forEach((z) => {
+      const vid = refs.current[z];
+      if (!vid) return;
+      if (z === settledZone) {
+        vid.currentTime = 0;
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+      }
+    });
+  }, [settledZone]);
 
   return (
-    <div
-      key={zone}                 // remount on zone change to restart animations cleanly
-      aria-hidden="true"
-      style={{
-        position:      'absolute',
-        inset:         0,
-        pointerEvents: 'none',
-        zIndex:        2,
-      }}
-    >
-      {[0, 0.6, 1.2].map((delay, i) => (
-        <div
-          key={i}
+    <>
+      {(Object.keys(ZONE_VIDEOS) as NonNullable<Zone>[]).map((z) => (
+        <video
+          key={z}
+          ref={el => { if (el) refs.current[z] = el; }}
+          src={ZONE_VIDEOS[z]}
+          muted
+          playsInline
+          loop
+          preload="auto"
+          aria-hidden="true"
           style={{
-            position:     'absolute',
-            top:          '45%',
-            left:         '50%',
-            width:        220,
-            height:       220,
-            marginLeft:   -110,
-            marginTop:    -110,
-            borderRadius: '50%',
-            border:       `1px solid ${color}`,
-            opacity:      0,
-            animation:    `zone-ring-expand ${duration} cubic-bezier(0.2, 0, 0.6, 1) ${delay}s infinite`,
+            position:      'absolute',
+            inset:         0,
+            width:         '100%',
+            height:        '100%',
+            objectFit:     'cover',
+            display:       'block',
+            pointerEvents: 'none',
+            mixBlendMode:  'screen',
+            zIndex:        1,
+            opacity:       settledZone === z ? 1 : 0,
+            transition:    'opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         />
       ))}
-    </div>
+    </>
   );
 }
 
@@ -154,9 +171,11 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const [labels,      setLabels]      = useState({ design: 0, ai: 0, astrion: 0 });
   const cursorXRef = useRef<number>(0.5);
 
-  // Delay zone pulse by 500ms so fast sweeps don't trigger animations
+  // Clear settled immediately on any zone change, then re-settle after 500ms of stillness.
+  // This ensures the animation video stops the moment the cursor moves.
   useEffect(() => {
-    if (!zone) { setSettledZone(null); return; }
+    setSettledZone(null);
+    if (!zone) return;
     const t = setTimeout(() => setSettledZone(zone), 500);
     return () => clearTimeout(t);
   }, [zone]);
@@ -204,25 +223,28 @@ export default function BrainHero({ thumbs = [] }: Props) {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1 — brain video */}
+      {/* Layer 1a — scrubbed brain (fades out when animation takes over) */}
       <div
         style={{
-          position: 'absolute', inset: 0,
-          mixBlendMode: 'screen',
+          position:      'absolute',
+          inset:         0,
+          mixBlendMode:  'screen',
           pointerEvents: 'none',
-          zIndex: 1,
+          zIndex:        1,
+          opacity:       settledZone ? 0 : 1,
+          transition:    'opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
         <MouseScrub src={VIDEO_SRC} poster={POSTER_SRC} cursorXRef={cursorXRef} />
       </div>
 
-      {/* Layer 2 — zone pulse rings (appear after 500ms settled in a zone) */}
-      <ZonePulse zone={settledZone} />
+      {/* Layer 1b — zone animation videos (fade in when settled, replace the scrub) */}
+      <ZoneVideo settledZone={settledZone} />
 
-      {/* Layer 3 — 2×3 project image grid (left third) */}
+      {/* Layer 2 — 2×3 project image grid (left third) */}
       <ProjectGrid images={thumbs} />
 
-      {/* Layer 4 — zone labels */}
+      {/* Layer 3 — zone labels */}
       <div
         aria-hidden="true"
         style={{
@@ -236,16 +258,16 @@ export default function BrainHero({ thumbs = [] }: Props) {
           <span
             key={z}
             style={{
-              display:        'block',
-              textAlign:      z === 'design' ? 'left' : z === 'astrion' ? 'right' : 'center',
-              fontFamily:     'var(--font-mono)',
-              fontSize:       'clamp(0.65rem, 1.2vw, 0.85rem)',
-              letterSpacing:  '0.25em',
-              textTransform:  'uppercase',
-              color:          COLORS[z],
-              opacity:        labels[z],
-              transition:     'opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-              userSelect:     'none',
+              display:       'block',
+              textAlign:     z === 'design' ? 'left' : z === 'astrion' ? 'right' : 'center',
+              fontFamily:    'var(--font-mono)',
+              fontSize:      'clamp(0.65rem, 1.2vw, 0.85rem)',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+              color:         COLORS[z],
+              opacity:       labels[z],
+              transition:    'opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+              userSelect:    'none',
             }}
           >
             {z}
@@ -263,7 +285,6 @@ export default function BrainHero({ thumbs = [] }: Props) {
         <a href="/astrion">Astrion</a>
       </nav>
 
-      {/* Cursor bubble */}
       <CursorBubble />
     </div>
   );
