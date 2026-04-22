@@ -4,7 +4,7 @@ import MouseScrub from './MouseScrub';
 // ─── Types & config ───────────────────────────────────────────────────────────
 
 type Zone      = 'design' | 'ai' | 'astrion' | null;
-type AnimPhase = 'scrubbing' | 'animating' | 'finishing';
+type AnimPhase = 'scrubbing' | 'animating' | 'reversing';
 
 const ROUTES = { design: '/work', ai: '/ai', astrion: '/astrion' } as const;
 const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const;
@@ -18,7 +18,8 @@ const ZONE_VIDEOS: Record<NonNullable<Zone>, string> = {
   astrion: '/videos/zone-astrion.mp4',
 };
 
-const SETTLE_MS = 1500;
+const SETTLE_MS   = 1500;
+const REWIND_RATE = 4; // × realtime
 
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
@@ -59,50 +60,69 @@ function CursorBubble() {
 
 // ─── Zone animation videos ────────────────────────────────────────────────────
 
-// All three videos are pre-loaded in the DOM. On settle: play from start,
-// looping. On cursor move: disable loop so the current pass plays to its
-// natural end (no cuts, no skips), then fire onFinished to hand back to scrub.
+// All three videos stay in the DOM so they're buffered.
+//
+// animating  — plays forward, looped, at 1×
+// reversing  — rAF loop scrubs currentTime backward at REWIND_RATE×;
+//              when it reaches 0 the brain scrub takes over seamlessly
+//              (frame 0 of each zone video should match the brain's resting
+//              state so the crossfade is invisible)
 
 interface ZoneVideoProps {
   activeZone: Zone;
-  finishing:  boolean;
-  onFinished: () => void;
+  reversing:  boolean;
+  onReversed: () => void;
 }
 
-function ZoneVideo({ activeZone, finishing, onFinished }: ZoneVideoProps) {
+function ZoneVideo({ activeZone, reversing, onReversed }: ZoneVideoProps) {
   const refs = useRef<Partial<Record<NonNullable<Zone>, HTMLVideoElement>>>({});
 
-  // Manage playback state for each video
+  // Start / stop forward playback
   useEffect(() => {
     const zones = Object.keys(ZONE_VIDEOS) as NonNullable<Zone>[];
     zones.forEach((z) => {
       const vid = refs.current[z];
       if (!vid) return;
-      if (z === activeZone) {
-        if (!finishing) {
-          vid.loop         = true;
-          vid.playbackRate = 1;
-          vid.currentTime  = 0;
-          vid.play().catch(() => {});
-        } else {
-          // Remove loop — current pass plays to end naturally, fires 'ended'
-          vid.loop = false;
-        }
+      if (z === activeZone && !reversing) {
+        vid.loop         = true;
+        vid.playbackRate = 1;
+        vid.currentTime  = 0;
+        vid.play().catch(() => {});
       } else {
         vid.pause();
       }
     });
-  }, [activeZone, finishing]);
+  }, [activeZone, reversing]);
 
-  // Attach ended listener only while finishing so we know when to hand back
+  // rAF-based reverse scrub — runs only in reversing phase
   useEffect(() => {
-    if (!finishing || !activeZone) return;
+    if (!reversing || !activeZone) return;
     const vid = refs.current[activeZone];
     if (!vid) return;
-    const handleEnded = () => onFinished();
-    vid.addEventListener('ended', handleEnded, { once: true });
-    return () => vid.removeEventListener('ended', handleEnded);
-  }, [finishing, activeZone, onFinished]);
+
+    vid.pause();
+
+    let rafId: number;
+    let last: number | null = null;
+
+    const step = (now: number) => {
+      const dt   = last !== null ? Math.min((now - last) / 1000, 0.05) : 0;
+      last       = now;
+      const next = vid.currentTime - dt * REWIND_RATE;
+
+      if (next <= 0) {
+        vid.currentTime = 0;
+        onReversed();
+        return;
+      }
+
+      vid.currentTime = next;
+      rafId = requestAnimationFrame(step);
+    };
+
+    rafId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafId);
+  }, [reversing, activeZone, onReversed]);
 
   return (
     <>
@@ -195,8 +215,7 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const [labels,     setLabels]     = useState({ design: 0, ai: 0, astrion: 0 });
   const cursorXRef = useRef<number>(0.5);
 
-  // Settle timer — only runs while scrubbing. Resets whenever zone changes.
-  // Moving while animating cancels this and transitions to 'finishing' instead.
+  // Settle timer — only runs while scrubbing; resets on any zone change
   useEffect(() => {
     if (phase !== 'scrubbing' || !zone) return;
     const t = setTimeout(() => {
@@ -206,8 +225,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
     return () => clearTimeout(t);
   }, [zone, phase]);
 
-  // Called by ZoneVideo when the finishing pass reaches its natural end
-  const handleAnimFinished = useCallback(() => {
+  // Called by ZoneVideo once the reverse scrub reaches frame 0
+  const handleReversed = useCallback(() => {
     setPhase('scrubbing');
     setActiveZone(null);
   }, []);
@@ -222,15 +241,15 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const z = getZone(nx);
     setZone(z);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
-    // If animating, let the current video finish before handing back to scrub
-    setPhase(prev => prev === 'animating' ? 'finishing' : prev);
+    // Any movement while animating triggers the reverse-to-start sequence
+    setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     cursorXRef.current = 0.5;
     setZone(null);
     setLabels({ design: 0, ai: 0, astrion: 0 });
-    setPhase(prev => prev === 'animating' ? 'finishing' : prev);
+    setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -240,13 +259,13 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const z = getZone(nx);
     setZone(z);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
-    setPhase(prev => prev === 'animating' ? 'finishing' : prev);
+    setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
 
   const handleClick    = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
   const handleTouchEnd = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
 
-  const showingAnimation = phase === 'animating' || phase === 'finishing';
+  const showingAnimation = phase === 'animating' || phase === 'reversing';
 
   return (
     <div
@@ -261,7 +280,7 @@ export default function BrainHero({ thumbs = [] }: Props) {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1a — scrubbed brain (hidden while zone animation plays) */}
+      {/* Layer 1a — scrubbed brain (hidden while zone animation plays or rewinds) */}
       <div
         style={{
           position:      'absolute',
@@ -279,8 +298,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
       {/* Layer 1b — zone animation videos */}
       <ZoneVideo
         activeZone={activeZone}
-        finishing={phase === 'finishing'}
-        onFinished={handleAnimFinished}
+        reversing={phase === 'reversing'}
+        onReversed={handleReversed}
       />
 
       {/* Layer 2 — 2×3 project image grid (left third) */}
