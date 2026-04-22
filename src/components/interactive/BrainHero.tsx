@@ -11,81 +11,88 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
-const SPAWN_INTERVAL = 1400;  // ms between each new drop
-const DROP_DURATION  = 3600;  // ms for full top→bottom fall
-const COLS           = 6;
-const COL_W          = 100 / COLS;   // 16.67vw per column
-const IMG_W          = COL_W * 0.72; // ~12vw — narrower than 1/6 viewport ✓
+// ─── 3D Carousel ─────────────────────────────────────────────────────────────
 
-// ─── Raining project images ───────────────────────────────────────────────────
+interface Item { id: number; src: string; }
 
-interface Drop {
-  id:       number;
-  src:      string;
-  col:      number;   // 0–5
-  xJitter:  number;   // vw offset within column for variation
-  duration: number;   // ms — slight per-drop variation
-}
+// 7 positions: 0 = entering right (off-screen), 1–2 = right side, 3 = center,
+// 4–5 = left side, 6 = exiting left (off-screen).
+// Queue advances right → left: items shift from index 6 → 0 over time.
+const SLOTS = [
+  { x: -88, scale: 0.40, ry:  62, opacity: 0,    zIdx: 0 },  // off-screen left
+  { x: -44, scale: 0.62, ry:  40, opacity: 0.36, zIdx: 1 },  // far left
+  { x: -22, scale: 0.80, ry:  21, opacity: 0.68, zIdx: 2 },  // near left
+  { x:   0, scale: 1.00, ry:   0, opacity: 1.00, zIdx: 4 },  // center
+  { x:  22, scale: 0.80, ry: -21, opacity: 0.68, zIdx: 2 },  // near right
+  { x:  44, scale: 0.62, ry: -40, opacity: 0.36, zIdx: 1 },  // far right
+  { x:  88, scale: 0.40, ry: -62, opacity: 0,    zIdx: 0 },  // off-screen right
+] as const;
 
-function RainingImages({ images, active }: { images: string[]; active: boolean }) {
-  const [drops, setDrops]   = useState<Drop[]>([]);
-  const nextId   = useRef(0);
-  const nextCol  = useRef(0);
-  const nextImg  = useRef(0);
+const CARD_W     = 28;               // vw
+const CARD_H     = CARD_W * 9 / 16; // vw — 16:9
+const ADVANCE_MS = 2600;             // ms between steps
+
+function Carousel3D({ images, active }: { images: string[]; active: boolean }) {
+  const N = images.length;
+
+  // Queue of 7 items — index 3 is center. Advancing pops front, pushes new to back.
+  const [queue, setQueue] = useState<Item[]>(() =>
+    Array.from({ length: 7 }, (_, i) => ({ id: i, src: images[i % N] }))
+  );
+  const nextId  = useRef(7);
+  const nextImg = useRef(7 % N);
 
   useEffect(() => {
-    if (!active || images.length === 0) return;
-
-    const spawn = () => {
-      const col      = nextCol.current % COLS;
-      const imgIdx   = nextImg.current % images.length;
-      const id       = nextId.current;
-      const duration = DROP_DURATION + (Math.random() - 0.5) * 800; // ±400ms variety
-      const xJitter  = (Math.random() - 0.5) * 3;                   // ±1.5vw lateral jitter
-
-      nextCol.current++;
-      nextImg.current++;
-      nextId.current++;
-
-      setDrops(prev => [...prev, { id, src: images[imgIdx], col, xJitter, duration }]);
-
-      // Remove after animation finishes
-      setTimeout(() => {
-        setDrops(prev => prev.filter(d => d.id !== id));
-      }, duration + 100);
-    };
-
-    spawn(); // first drop immediately on zone entry
-    const interval = setInterval(spawn, SPAWN_INTERVAL);
-    return () => clearInterval(interval);
-  }, [active, images]);
-
-  if (drops.length === 0) return null;
+    if (!active || N === 0) return;
+    const timer = setInterval(() => {
+      setQueue(prev => [
+        ...prev.slice(1),
+        { id: nextId.current++, src: images[nextImg.current] },
+      ]);
+      nextImg.current = (nextImg.current + 1) % N;
+    }, ADVANCE_MS);
+    return () => clearInterval(timer);
+  }, [active, images, N]);
 
   return (
     <div
       aria-hidden="true"
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}
+      style={{
+        position:          'absolute',
+        bottom:            '9%',
+        left:              0,
+        right:             0,
+        height:            `${CARD_H * 1.4}vw`,
+        perspective:       '1100px',
+        perspectiveOrigin: '50% 50%',
+        pointerEvents:     'none',
+        opacity:           active ? 1 : 0,
+        transition:        'opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+      }}
     >
-      {drops.map(drop => {
-        // Center image within its column, then apply jitter
-        const leftVw = drop.col * COL_W + (COL_W - IMG_W) / 2 + drop.xJitter;
-
+      {queue.map((item, qi) => {
+        const s = SLOTS[qi];
         return (
           <img
-            key={drop.id}
-            src={drop.src}
+            key={item.id}
+            src={item.src}
             alt=""
-            loading="lazy"
             style={{
-              position:  'absolute',
-              top:       0,
-              left:      `${leftVw}vw`,
-              width:     `${IMG_W}vw`,
-              height:    'auto',
-              display:   'block',
-              animation: `rain-drop ${drop.duration}ms ease-in forwards`,
-              willChange: 'transform, opacity',
+              position:     'absolute',
+              top:          '50%',
+              left:         '50%',
+              width:        `${CARD_W}vw`,
+              height:       `${CARD_H}vw`,
+              marginTop:    `${-(CARD_H / 2)}vw`,
+              marginLeft:   `${-(CARD_W / 2)}vw`,
+              objectFit:    'cover',
+              display:      'block',
+              borderRadius: '3px',
+              transform:    `translateX(${s.x}vw) scale(${s.scale}) rotateY(${s.ry}deg)`,
+              opacity:      s.opacity,
+              zIndex:       s.zIdx,
+              transition:   'transform 0.88s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.88s cubic-bezier(0.22, 1, 0.36, 1)',
+              willChange:   'transform, opacity',
             }}
           />
         );
@@ -133,8 +140,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1 — raining project images (design zone only) */}
-      <RainingImages images={thumbs} active={inDesign} />
+      {/* Layer 1 — 3D coverflow carousel (design zone only) */}
+      <Carousel3D images={thumbs} active={inDesign} />
 
       {/* Layer 2 — brain video, screen-blended so black bg is transparent */}
       <div
