@@ -11,48 +11,50 @@ interface Props {
 const { rows } = Astro.props;
 ---
 
-<!--
-  The Mission Control spec block.
-  Left col: mono-uppercase labels in muted.
-  Right col: sans values in ink.
-  Each row separated by a 1px hairline.
-  This is the single most identifiable aesthetic move — apply it to every case study header.
--->
 <dl class="spec-block font-mono">
   {rows.map(({ label, value }) => (
-    <>
-      <dt class="spec-block__label">{label}</dt>
-      <dd class="spec-block__value">{value}</dd>
-    </>
+    <div class="spec-row">
+      <dt class="spec-row__label">{label}</dt>
+      <dd class="spec-row__value">{value}</dd>
+    </div>
   ))}
 </dl>
 
 <style>
   .spec-block {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    font-size: var(--text-xs);
+    margin: var(--space-8) 0;
     border-top: 1px solid var(--line);
   }
 
-  .spec-block__label,
-  .spec-block__value {
-    padding: 0.6rem 0;
+  .spec-row {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: var(--space-6);
+    padding: var(--space-3) 0;
     border-bottom: 1px solid var(--line);
+    align-items: baseline;
   }
 
-  .spec-block__label {
+  .spec-row__label {
+    font-size: var(--text-xs);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--muted);
-    padding-right: 2.5rem;
-    font-family: var(--font-mono);
+    margin: 0;
   }
 
-  .spec-block__value {
-    color: var(--ink);
+  .spec-row__value {
     font-family: var(--font-body);
     font-size: var(--text-sm);
     letter-spacing: 0;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .spec-row {
+      grid-template-columns: 7rem 1fr;
+      gap: var(--space-3);
+    }
   }
 </style>

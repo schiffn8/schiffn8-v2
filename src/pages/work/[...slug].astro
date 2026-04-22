@@ -1,19 +1,42 @@
 ---
 import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import CaseStudy from '../../layouts/CaseStudy.astro';
+import ProjectNav from '../../components/ProjectNav.astro';
+import Figure from '../../components/Figure.astro';
+import Gallery from '../../components/interactive/Gallery';
+import PullQuote from '../../components/PullQuote.astro';
+import VideoEmbed from '../../components/VideoEmbed.astro';
+import Credits from '../../components/Credits.astro';
+import SpecBlock from '../../components/SpecBlock.astro';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects', ({ data }) => !data.draft);
-  return projects.map((project) => ({
+  const sorted = projects.sort((a, b) => (a.data.order ?? 999) - (b.data.order ?? 999));
+  return sorted.map((project, i) => ({
     params: { slug: project.id },
-    props: { project },
+    props: {
+      project,
+      prev: sorted[i - 1] ?? sorted[sorted.length - 1],
+      next: sorted[i + 1] ?? sorted[0],
+    },
   }));
 }
 
-const { project } = Astro.props;
+interface Props {
+  project: CollectionEntry<'projects'>;
+  prev: CollectionEntry<'projects'>;
+  next: CollectionEntry<'projects'>;
+}
+
+const { project, prev, next } = Astro.props;
 const { Content } = await render(project);
+
+// MDX component map — these are available as JSX tags in any .mdx file
+const components = { Figure, Gallery, PullQuote, VideoEmbed, Credits, SpecBlock };
 ---
 
 <CaseStudy project={project}>
-  <Content />
+  <Content components={components} />
 </CaseStudy>
+<ProjectNav prev={prev} next={next} />

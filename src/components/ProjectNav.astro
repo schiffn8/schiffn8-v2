@@ -1,0 +1,70 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  prev: CollectionEntry<'projects'>;
+  next: CollectionEntry<'projects'>;
+}
+
+const { prev, next } = Astro.props;
+---
+
+<nav class="project-nav" aria-label="Project navigation">
+  <a href={`/work/${prev.id}`} class="project-nav__item project-nav__item--prev">
+    <span class="project-nav__label label">← Previous</span>
+    <span class="project-nav__title font-display">{prev.data.title}</span>
+  </a>
+  <a href={`/work/${next.id}`} class="project-nav__item project-nav__item--next">
+    <span class="project-nav__label label">Next →</span>
+    <span class="project-nav__title font-display">{next.data.title}</span>
+  </a>
+</nav>
+
+<style>
+  .project-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--line);
+    margin-top: var(--space-24);
+  }
+
+  .project-nav__item {
+    padding: var(--space-12) var(--gutter);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    color: var(--ink);
+    text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+
+  .project-nav__item:hover {
+    background: var(--accent-muted);
+  }
+
+  .project-nav__item--next {
+    text-align: right;
+    border-left: 1px solid var(--line);
+  }
+
+  .project-nav__label {
+    color: var(--muted);
+  }
+
+  .project-nav__title {
+    font-size: var(--text-lg);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-snug);
+  }
+
+  @media (max-width: 640px) {
+    .project-nav {
+      grid-template-columns: 1fr;
+    }
+    .project-nav__item--next {
+      text-align: left;
+      border-left: none;
+      border-top: 1px solid var(--line);
+    }
+  }
+</style>

@@ -19,13 +19,34 @@ const specRows = [
   { label: 'Category', value: tags.join(', ') },
 ];
 
-// For video scrub: generate an optimized poster from the hero image
+// Optimized poster for video scrub fallback
 const posterImg = heroVideo
   ? await getImage({ src: hero, width: 1600, format: 'webp' })
   : null;
+
+// OG image — full URL for social sharing
+const ogImage = Astro.site
+  ? new URL(hero.src, Astro.site).toString()
+  : hero.src;
+
+// Slug used for view-transition-name (must be a valid CSS ident)
+const transitionName = `project-${project.id.replace(/[^a-z0-9]/gi, '-')}`;
+
+// JSON-LD structured data
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  name: title,
+  description: summary,
+  creator: { '@type': 'Person', name: 'Nate Schiffler', url: 'https://schiffn8design.com' },
+  datePublished: `${year}-01-01`,
+  image: ogImage,
+};
 ---
 
-<Base title={title} description={summary}>
+<Base title={title} description={summary} ogImage={ogImage}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
   <article class="case-study">
 
     <!-- Header: kicker → title → summary → spec block -->
@@ -44,9 +65,12 @@ const posterImg = heroVideo
       </div>
     </header>
 
-    <!-- Hero: video scrub OR static image -->
+    <!-- Hero: video scrub OR static image with view-transition-name -->
     {heroVideo ? (
-      <div class="case-study__hero-video">
+      <div
+        class="case-study__hero-video"
+        style={`view-transition-name: ${transitionName}`}
+      >
         <VideoScrub
           client:load
           src={heroVideo}
@@ -55,7 +79,10 @@ const posterImg = heroVideo
         />
       </div>
     ) : (
-      <div class="case-study__hero">
+      <div
+        class="case-study__hero"
+        style={`view-transition-name: ${transitionName}`}
+      >
         <Image
           src={hero}
           alt={`${title} — hero`}
@@ -83,6 +110,7 @@ const posterImg = heroVideo
 
   .case-study__kicker {
     margin-bottom: var(--space-6);
+    display: block;
   }
 
   .case-study__title {
@@ -118,12 +146,12 @@ const posterImg = heroVideo
     border-radius: 0;
   }
 
-  /* Video scrub hero — no overflow hidden, needs full height of container */
+  /* Video scrub — no overflow clip, container must breathe */
   .case-study__hero-video {
     margin-bottom: var(--space-24);
   }
 
-  /* Prose typography */
+  /* Prose */
   .case-study__body {
     max-width: var(--max-w-prose);
     margin: 0 auto;
@@ -154,5 +182,11 @@ const posterImg = heroVideo
 
   .prose :global(p + p) {
     margin-top: var(--space-4);
+  }
+
+  /* Figure / Gallery components inside prose */
+  .prose :global(.figure),
+  .prose :global(.gallery) {
+    max-width: none;
   }
 </style>

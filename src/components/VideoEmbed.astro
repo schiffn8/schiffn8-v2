@@ -1,0 +1,54 @@
+---
+interface Props {
+  src?: string;
+  poster?: string;
+  caption?: string;
+  youtube?: string;
+  vimeo?: string;
+}
+
+const { src, poster, caption, youtube, vimeo } = Astro.props;
+---
+
+<figure class="video-embed">
+  {youtube ? (
+    <iframe
+      src={`https://www.youtube-nocookie.com/embed/${youtube}`}
+      loading="lazy"
+      allowfullscreen
+      title={caption ?? 'Video'}
+    />
+  ) : vimeo ? (
+    <iframe
+      src={`https://player.vimeo.com/video/${vimeo}`}
+      loading="lazy"
+      allowfullscreen
+      title={caption ?? 'Video'}
+    />
+  ) : (
+    <video src={src} poster={poster} controls preload="metadata" />
+  )}
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .video-embed {
+    margin: var(--space-12) 0;
+  }
+
+  .video-embed iframe,
+  .video-embed video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    display: block;
+  }
+
+  figcaption {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-mono);
+    margin-top: var(--space-3);
+  }
+</style>

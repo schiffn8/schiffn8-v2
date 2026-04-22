@@ -1,0 +1,57 @@
+---
+interface CreditRole {
+  role: string;
+  people: string[];
+}
+
+interface Props {
+  roles: CreditRole[];
+}
+
+const { roles } = Astro.props;
+---
+
+<section class="credits">
+  <h2 class="credits__heading label">Credits</h2>
+  <dl class="credits__list font-mono">
+    {roles.map(({ role, people }) => (
+      <>
+        <dt class="credits__role">{role}</dt>
+        <dd class="credits__people">{people.join(', ')}</dd>
+      </>
+    ))}
+  </dl>
+</section>
+
+<style>
+  .credits {
+    margin-top: var(--space-24);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--line);
+  }
+
+  .credits__heading {
+    display: block;
+    margin-bottom: var(--space-6);
+  }
+
+  .credits__list {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    gap: var(--space-3) var(--space-6);
+    font-size: var(--text-xs);
+  }
+
+  .credits__role {
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .credits__people {
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    letter-spacing: 0;
+  }
+</style>
