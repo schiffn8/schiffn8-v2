@@ -15,6 +15,7 @@ const projects = defineCollection({
     order: z.number().default(999),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
+    heroVideo: z.string().optional(), // path under /public, e.g. "/videos/the-fix.mp4"
     links: z.array(z.object({
       label: z.string(),
       url: z.string().url(),

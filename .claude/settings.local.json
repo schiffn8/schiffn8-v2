@@ -15,7 +15,9 @@
       "Bash(git commit *)",
       "WebFetch(domain:schiffn8design.com)",
       "WebSearch",
-      "WebFetch(domain:crwflags.com)"
+      "WebFetch(domain:crwflags.com)",
+      "Bash(curl -s http://localhost:4321/work/the-fix)",
+      "Bash(pkill -f \"astro dev\")"
     ]
   }
 }

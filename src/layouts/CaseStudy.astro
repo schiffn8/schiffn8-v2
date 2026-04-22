@@ -1,7 +1,8 @@
 ---
 import Base from './Base.astro';
 import SpecBlock from '../components/SpecBlock.astro';
-import { Image } from 'astro:assets';
+import VideoScrub from '../components/interactive/VideoScrub';
+import { Image, getImage } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -9,20 +10,25 @@ interface Props {
 }
 
 const { project } = Astro.props;
-const { title, summary, role, year, client, tags, hero } = project.data;
+const { title, summary, role, year, client, tags, hero, heroVideo } = project.data;
 
 const specRows = [
-  { label: 'Role', value: role },
-  { label: 'Year', value: String(year) },
+  { label: 'Role',     value: role },
+  { label: 'Year',     value: String(year) },
   ...(client ? [{ label: 'Client', value: client }] : []),
   { label: 'Category', value: tags.join(', ') },
 ];
+
+// For video scrub: generate an optimized poster from the hero image
+const posterImg = heroVideo
+  ? await getImage({ src: hero, width: 1600, format: 'webp' })
+  : null;
 ---
 
 <Base title={title} description={summary}>
   <article class="case-study">
 
-    <!-- Header: title → summary → spec block (no hero image yet) -->
+    <!-- Header: kicker → title → summary → spec block -->
     <header class="case-study__header">
       <p class="case-study__kicker label">
         {tags[0]}
@@ -38,16 +44,27 @@ const specRows = [
       </div>
     </header>
 
-    <!-- Hero: full-bleed, mask-reveals in motion-patterns skill -->
-    <div class="case-study__hero">
-      <Image
-        src={hero}
-        alt={`${title} — hero`}
-        widths={[800, 1200, 1600, 2000]}
-        sizes="100vw"
-        class="case-study__hero-img"
-      />
-    </div>
+    <!-- Hero: video scrub OR static image -->
+    {heroVideo ? (
+      <div class="case-study__hero-video">
+        <VideoScrub
+          client:load
+          src={heroVideo}
+          poster={posterImg?.src}
+          scrollHeightVh={300}
+        />
+      </div>
+    ) : (
+      <div class="case-study__hero">
+        <Image
+          src={hero}
+          alt={`${title} — hero`}
+          widths={[800, 1200, 1600, 2000]}
+          sizes="100vw"
+          class="case-study__hero-img"
+        />
+      </div>
+    )}
 
     <!-- Body prose -->
     <div class="case-study__body prose">
@@ -88,6 +105,7 @@ const specRows = [
     max-width: 480px;
   }
 
+  /* Static hero */
   .case-study__hero {
     overflow: hidden;
     margin-bottom: var(--space-24);
@@ -100,13 +118,18 @@ const specRows = [
     border-radius: 0;
   }
 
+  /* Video scrub hero — no overflow hidden, needs full height of container */
+  .case-study__hero-video {
+    margin-bottom: var(--space-24);
+  }
+
+  /* Prose typography */
   .case-study__body {
     max-width: var(--max-w-prose);
     margin: 0 auto;
     padding: 0 var(--gutter) var(--space-32);
   }
 
-  /* Prose typography */
   .prose :global(h2) {
     font-family: var(--font-display);
     font-size: var(--text-2xl);
