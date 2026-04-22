@@ -13,51 +13,105 @@ const POSTER_SRC = '/images/brain-ai.webp';
 
 // ─── Cursor bubble trail ──────────────────────────────────────────────────────
 
-// Lead + 3 shrinking ghosts. All target the same cursor position but each
-// trails behind via a progressively longer CSS transition duration.
-const BUBBLES = [
-  { size: 58, opacity: 1.00, ms:   0 },  // lead — snaps instantly
-  { size: 42, opacity: 0.55, ms: 130 },  // ghost 1
-  { size: 28, opacity: 0.28, ms: 260 },  // ghost 2
-  { size: 16, opacity: 0.12, ms: 400 },  // ghost 3
-] as const;
+// Each ghost samples the cursor's position history at 33/66/100ms lookback.
+// Opacity = 1 - (age / 100ms), so ghosts fully vanish 100ms after the cursor stops.
+const GHOST_SIZES = [42, 28, 16] as const; // px — 3 trailing ghosts
+const TRAIL_MS    = 100;
+const LEAD_SIZE   = 58;
 
 function CursorBubbles() {
-  const refs = useRef<Array<HTMLDivElement | null>>(new Array(BUBBLES.length).fill(null));
+  const leadRef   = useRef<HTMLDivElement>(null);
+  const ghostRefs = useRef<Array<HTMLDivElement | null>>(new Array(3).fill(null));
+  // Timestamped position ring-buffer; newest entries at the back
+  const history   = useRef<Array<{ x: number; y: number; t: number }>>([]);
+  const curPos    = useRef({ x: -200, y: -200 });
+  const rafRef    = useRef<number>();
 
   useEffect(() => {
-    const move = (e: MouseEvent) => {
-      BUBBLES.forEach(({ size }, i) => {
-        const el = refs.current[i];
-        if (el) el.style.transform = `translate(${e.clientX - size / 2}px, ${e.clientY - size / 2}px)`;
-      });
+    const onMove = (e: MouseEvent) => {
+      curPos.current = { x: e.clientX, y: e.clientY };
+      history.current.push({ x: e.clientX, y: e.clientY, t: performance.now() });
     };
-    window.addEventListener('mousemove', move, { passive: true });
-    return () => window.removeEventListener('mousemove', move);
+    const onLeave = () => {
+      curPos.current = { x: -200, y: -200 };
+      history.current = [];
+    };
+
+    const tick = () => {
+      const now = performance.now();
+
+      // Prune entries older than the trail window
+      while (history.current.length > 0 && now - history.current[0].t > TRAIL_MS) {
+        history.current.shift();
+      }
+
+      // Lead — always snaps to current cursor, no transition
+      if (leadRef.current) {
+        leadRef.current.style.transform =
+          `translate(${curPos.current.x - LEAD_SIZE / 2}px, ${curPos.current.y - LEAD_SIZE / 2}px)`;
+      }
+
+      // Ghosts — find the history point closest to each lookback target
+      ghostRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const h = history.current;
+        if (h.length === 0) { el.style.opacity = '0'; return; }
+
+        const targetTime = now - ((i + 1) / 3) * TRAIL_MS; // 33, 66, 100ms ago
+        let best = h[0];
+        let bestDiff = Math.abs(h[0].t - targetTime);
+        for (const p of h) {
+          const d = Math.abs(p.t - targetTime);
+          if (d < bestDiff) { bestDiff = d; best = p; }
+        }
+
+        const age = now - best.t;
+        const opacity = Math.max(0, 1 - age / TRAIL_MS);
+        const size = GHOST_SIZES[i];
+        el.style.opacity = String(opacity);
+        el.style.transform = `translate(${best.x - size / 2}px, ${best.y - size / 2}px)`;
+      });
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    window.addEventListener('mousemove', onMove, { passive: true });
+    document.addEventListener('mouseleave', onLeave);
+    return () => {
+      cancelAnimationFrame(rafRef.current!);
+      window.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseleave', onLeave);
+    };
   }, []);
 
   return (
     <>
-      {BUBBLES.map(({ size, opacity, ms }, i) => (
+      <div
+        ref={leadRef}
+        aria-hidden="true"
+        style={{
+          position: 'fixed', top: 0, left: 0,
+          width: LEAD_SIZE, height: LEAD_SIZE,
+          borderRadius: '50%', background: '#fff',
+          mixBlendMode: 'difference', pointerEvents: 'none',
+          transform: 'translate(-200px, -200px)',
+          zIndex: 9999, willChange: 'transform',
+        }}
+      />
+      {GHOST_SIZES.map((size, i) => (
         <div
           key={i}
-          ref={el => { refs.current[i] = el; }}
+          ref={el => { ghostRefs.current[i] = el; }}
           aria-hidden="true"
           style={{
-            position:      'fixed',
-            top:           0,
-            left:          0,
-            width:         size,
-            height:        size,
-            borderRadius:  '50%',
-            background:    '#fff',
-            mixBlendMode:  'difference',
-            pointerEvents: 'none',
-            opacity,
-            transform:     'translate(-120px, -120px)',
-            transition:    ms > 0 ? `transform ${ms}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none',
-            zIndex:        9999 - i,
-            willChange:    'transform',
+            position: 'fixed', top: 0, left: 0,
+            width: size, height: size,
+            borderRadius: '50%', background: '#fff',
+            mixBlendMode: 'difference', pointerEvents: 'none',
+            opacity: 0,
+            transform: 'translate(-200px, -200px)',
+            zIndex: 9998 - i, willChange: 'transform, opacity',
           }}
         />
       ))}
