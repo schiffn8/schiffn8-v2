@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import MouseScrub from './MouseScrub';
 
 // ─── Types & config ───────────────────────────────────────────────────────────
@@ -11,72 +11,87 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
+// ─── Cursor bubble ────────────────────────────────────────────────────────────
+
+function CursorBubble() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const move = (e: MouseEvent) => {
+      el.style.transform = `translate(${e.clientX - 30}px, ${e.clientY - 30}px)`;
+    };
+    window.addEventListener('mousemove', move, { passive: true });
+    return () => window.removeEventListener('mousemove', move);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      style={{
+        position:      'fixed',
+        top:           0,
+        left:          0,
+        width:         60,
+        height:        60,
+        borderRadius:  '50%',
+        background:    '#fff',
+        mixBlendMode:  'difference',
+        pointerEvents: 'none',
+        transform:     'translate(-120px, -120px)', // start off-screen
+        transition:    'transform 75ms ease-out',
+        zIndex:        9999,
+        willChange:    'transform',
+      }}
+    />
+  );
+}
+
 // ─── Project image grid ───────────────────────────────────────────────────────
 
-// 6 staggered positions across the left third of the viewport.
-// `origin` controls which corner stays anchored when the image expands.
-const GRID_POS = [
-  { top: '11%', left: '2%',  rotate: '-2.1deg', origin: 'top left'    },
-  { top:  '8%', left: '12%', rotate:  '1.4deg', origin: 'top left'    },
-  { top: '35%', left: '1%',  rotate:  '1.0deg', origin: 'top left'    },
-  { top: '32%', left: '13%', rotate: '-1.7deg', origin: 'top left'    },
-  { top: '59%', left: '2%',  rotate:  '1.8deg', origin: 'bottom left' },
-  { top: '55%', left: '11%', rotate: '-1.0deg', origin: 'bottom left' },
-] as const;
-
-// scale(5) expands a 10vw image to 50vw — exactly 1/4 of a 16:9 viewport area
-const THUMB_W    = 10;  // vw
-const SCALE_FULL = 5;
-
-function ProjectGrid({ images, active }: { images: string[]; active: boolean }) {
+function ProjectGrid({ images }: { images: string[] }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
     <div
       aria-hidden="true"
       style={{
-        position:      'absolute',
-        inset:         0,
-        pointerEvents: active ? 'auto' : 'none',
-        opacity:       active ? 1 : 0,
-        transition:    'opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+        position:              'absolute',
+        top:                   0,
+        left:                  0,
+        width:                 '33.33vw',
+        height:                '100dvh',
+        display:               'grid',
+        gridTemplateColumns:   '1fr 1fr',
+        gridTemplateRows:      '1fr 1fr 1fr',
+        zIndex:                3,
       }}
     >
-      {images.map((src, i) => {
-        const pos       = GRID_POS[i % GRID_POS.length];
-        const isHovered = hoveredIdx === i;
-        const isDimmed  = hoveredIdx !== null && !isHovered;
-
-        return (
+      {images.slice(0, 6).map((src, i) => (
+        <div
+          key={i}
+          style={{ overflow: 'hidden', position: 'relative' }}
+          onMouseEnter={() => setHoveredIdx(i)}
+          onMouseLeave={() => setHoveredIdx(null)}
+        >
           <img
-            key={i}
             src={src}
             alt=""
-            onMouseEnter={() => setHoveredIdx(i)}
-            onMouseLeave={() => setHoveredIdx(null)}
             style={{
-              position:        'absolute',
-              top:             pos.top,
-              left:            pos.left,
-              width:           `${THUMB_W}vw`,
-              aspectRatio:     '16 / 9',
-              objectFit:       'cover',
-              display:         'block',
-              borderRadius:    '3px',
-              transformOrigin: pos.origin,
-              transform:       isHovered
-                ? `rotate(0deg) scale(${SCALE_FULL})`
-                : `rotate(${pos.rotate}) scale(1)`,
-              opacity:  isHovered ? 1 : isDimmed ? 0.07 : 0.26,
-              zIndex:   isHovered ? 15 : isDimmed ? 0 : i + 1,
-              transition:
-                'transform 0.52s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.38s ease',
-              willChange: 'transform, opacity',
-              cursor:     'pointer',
+              width:      '100%',
+              height:     '100%',
+              objectFit:  'cover',
+              display:    'block',
+              opacity:    hoveredIdx === i ? 1 : 0,
+              transform:  hoveredIdx === i ? 'scale(1.05)' : 'scale(1)',
+              transition: 'opacity 0.32s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+              willChange: 'opacity, transform',
             }}
           />
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -90,8 +105,6 @@ interface Props {
 export default function BrainHero({ thumbs = [] }: Props) {
   const [zone,   setZone]   = useState<Zone>(null);
   const [labels, setLabels] = useState({ design: 0, ai: 0, astrion: 0 });
-
-  // Shared ref drives MouseScrub without triggering re-renders on every mousemove
   const cursorXRef = useRef<number>(0.5);
 
   const getZone = (nx: number): Zone =>
@@ -124,14 +137,12 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const handleClick    = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
   const handleTouchEnd = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
 
-  const inDesign = zone === 'design';
-
   return (
     <div
       style={{
         width: '100vw', height: '100dvh',
         background: '#000', position: 'relative', overflow: 'hidden',
-        cursor: zone ? 'pointer' : 'crosshair',
+        cursor: 'none',
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -139,19 +150,20 @@ export default function BrainHero({ thumbs = [] }: Props) {
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1 — project image grid; events pass through brain wrapper above */}
-      <ProjectGrid images={thumbs} active={inDesign} />
-
-      {/* Layer 2 — brain video (screen blend; pointer-events:none so grid gets hover) */}
+      {/* Layer 1 — brain video (screen blend on black; pointer-events:none so grid gets hover) */}
       <div
         style={{
           position: 'absolute', inset: 0,
           mixBlendMode: 'screen',
           pointerEvents: 'none',
+          zIndex: 1,
         }}
       >
         <MouseScrub src={VIDEO_SRC} poster={POSTER_SRC} cursorXRef={cursorXRef} />
       </div>
+
+      {/* Layer 2 — 2×3 project image grid (left third, above brain) */}
+      <ProjectGrid images={thumbs} />
 
       {/* Layer 3 — zone labels */}
       <div
@@ -160,6 +172,7 @@ export default function BrainHero({ thumbs = [] }: Props) {
           position: 'absolute', inset: 0, pointerEvents: 'none',
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
           alignItems: 'flex-end', padding: '0 6% 7%',
+          zIndex: 5,
         }}
       >
         {(['design', 'ai', 'astrion'] as const).map((z) => (
@@ -192,6 +205,9 @@ export default function BrainHero({ thumbs = [] }: Props) {
         <a href="/ai">AI Work</a>
         <a href="/astrion">Astrion</a>
       </nav>
+
+      {/* Cursor bubble — inverts screen colors within circle */}
+      <CursorBubble />
     </div>
   );
 }
