@@ -27,7 +27,8 @@ export default function MouseScrub({ src, poster, cursorXRef }: Props) {
     const tick = () => {
       if (isReady.current && video.duration) {
         currentX.current += (cursorXRef.current - currentX.current) * 0.09;
-        const t = Math.max(0, Math.min(1, currentX.current));
+        // Map the center 50% of the viewport (0.25–0.75) to the full video
+        const t = Math.max(0, Math.min(1, (currentX.current - 0.25) * 2));
         video.currentTime = t * video.duration;
       }
       rafId.current = requestAnimationFrame(tick);

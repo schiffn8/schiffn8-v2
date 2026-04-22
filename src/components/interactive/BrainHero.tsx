@@ -11,41 +11,57 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
-// ─── Cursor bubble ────────────────────────────────────────────────────────────
+// ─── Cursor bubble trail ──────────────────────────────────────────────────────
 
-function CursorBubble() {
-  const ref = useRef<HTMLDivElement>(null);
+// Lead + 3 shrinking ghosts. All target the same cursor position but each
+// trails behind via a progressively longer CSS transition duration.
+const BUBBLES = [
+  { size: 58, opacity: 1.00, ms:   0 },  // lead — snaps instantly
+  { size: 42, opacity: 0.55, ms: 130 },  // ghost 1
+  { size: 28, opacity: 0.28, ms: 260 },  // ghost 2
+  { size: 16, opacity: 0.12, ms: 400 },  // ghost 3
+] as const;
+
+function CursorBubbles() {
+  const refs = useRef<Array<HTMLDivElement | null>>(new Array(BUBBLES.length).fill(null));
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
     const move = (e: MouseEvent) => {
-      el.style.transform = `translate(${e.clientX - 30}px, ${e.clientY - 30}px)`;
+      BUBBLES.forEach(({ size }, i) => {
+        const el = refs.current[i];
+        if (el) el.style.transform = `translate(${e.clientX - size / 2}px, ${e.clientY - size / 2}px)`;
+      });
     };
     window.addEventListener('mousemove', move, { passive: true });
     return () => window.removeEventListener('mousemove', move);
   }, []);
 
   return (
-    <div
-      ref={ref}
-      aria-hidden="true"
-      style={{
-        position:      'fixed',
-        top:           0,
-        left:          0,
-        width:         60,
-        height:        60,
-        borderRadius:  '50%',
-        background:    '#fff',
-        mixBlendMode:  'difference',
-        pointerEvents: 'none',
-        transform:     'translate(-120px, -120px)', // start off-screen
-        transition:    'transform 75ms ease-out',
-        zIndex:        9999,
-        willChange:    'transform',
-      }}
-    />
+    <>
+      {BUBBLES.map(({ size, opacity, ms }, i) => (
+        <div
+          key={i}
+          ref={el => { refs.current[i] = el; }}
+          aria-hidden="true"
+          style={{
+            position:      'fixed',
+            top:           0,
+            left:          0,
+            width:         size,
+            height:        size,
+            borderRadius:  '50%',
+            background:    '#fff',
+            mixBlendMode:  'difference',
+            pointerEvents: 'none',
+            opacity,
+            transform:     'translate(-120px, -120px)',
+            transition:    ms > 0 ? `transform ${ms}ms cubic-bezier(0.22, 1, 0.36, 1)` : 'none',
+            zIndex:        9999 - i,
+            willChange:    'transform',
+          }}
+        />
+      ))}
+    </>
   );
 }
 
@@ -206,8 +222,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
         <a href="/astrion">Astrion</a>
       </nav>
 
-      {/* Cursor bubble — inverts screen colors within circle */}
-      <CursorBubble />
+      {/* Cursor bubble trail — lead + 3 shrinking ghosts, all invert via difference blend */}
+      <CursorBubbles />
     </div>
   );
 }
