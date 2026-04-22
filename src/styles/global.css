@@ -59,6 +59,19 @@
   }
 }
 
+/* View Transition timing — page-level fade is fast; hero morphs get MC easing */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hero shared-element transitions get a longer, more cinematic duration */
+::view-transition-group(*) {
+  animation-duration: 500ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @layer utilities {
   .font-display { font-family: var(--font-display); }
   .font-mono    { font-family: var(--font-mono); }

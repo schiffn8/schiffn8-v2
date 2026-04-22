@@ -1,6 +1,7 @@
 ---
 import Base from './Base.astro';
 import SpecBlock from '../components/SpecBlock.astro';
+import MaskReveal from '../components/MaskReveal.astro';
 import VideoScrub from '../components/interactive/VideoScrub';
 import { Image, getImage } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
@@ -69,7 +70,7 @@ const jsonLd = {
     {heroVideo ? (
       <div
         class="case-study__hero-video"
-        style={`view-transition-name: ${transitionName}`}
+        transition:name={transitionName}
       >
         <VideoScrub
           client:load
@@ -81,15 +82,17 @@ const jsonLd = {
     ) : (
       <div
         class="case-study__hero"
-        style={`view-transition-name: ${transitionName}`}
+        transition:name={transitionName}
       >
-        <Image
-          src={hero}
-          alt={`${title} — hero`}
-          widths={[800, 1200, 1600, 2000]}
-          sizes="100vw"
-          class="case-study__hero-img"
-        />
+        <MaskReveal>
+          <Image
+            src={hero}
+            alt={`${title} — hero`}
+            widths={[800, 1200, 1600, 2000]}
+            sizes="100vw"
+            class="case-study__hero-img"
+          />
+        </MaskReveal>
       </div>
     )}
 
