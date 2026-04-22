@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import MouseScrub from './MouseScrub';
 
 // ─── Types & config ───────────────────────────────────────────────────────────
@@ -11,88 +11,68 @@ const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
 
-// ─── 3D Carousel ─────────────────────────────────────────────────────────────
+// ─── Project image grid ───────────────────────────────────────────────────────
 
-interface Item { id: number; src: string; }
-
-// 7 positions: 0 = entering right (off-screen), 1–2 = right side, 3 = center,
-// 4–5 = left side, 6 = exiting left (off-screen).
-// Queue advances right → left: items shift from index 6 → 0 over time.
-const SLOTS = [
-  { x: -88, scale: 0.40, ry:  62, opacity: 0,    zIdx: 0 },  // off-screen left
-  { x: -44, scale: 0.62, ry:  40, opacity: 0.36, zIdx: 1 },  // far left
-  { x: -22, scale: 0.80, ry:  21, opacity: 0.68, zIdx: 2 },  // near left
-  { x:   0, scale: 1.00, ry:   0, opacity: 1.00, zIdx: 4 },  // center
-  { x:  22, scale: 0.80, ry: -21, opacity: 0.68, zIdx: 2 },  // near right
-  { x:  44, scale: 0.62, ry: -40, opacity: 0.36, zIdx: 1 },  // far right
-  { x:  88, scale: 0.40, ry: -62, opacity: 0,    zIdx: 0 },  // off-screen right
+// 6 staggered positions across the left third of the viewport.
+// `origin` controls which corner stays anchored when the image expands.
+const GRID_POS = [
+  { top: '11%', left: '2%',  rotate: '-2.1deg', origin: 'top left'    },
+  { top:  '8%', left: '12%', rotate:  '1.4deg', origin: 'top left'    },
+  { top: '35%', left: '1%',  rotate:  '1.0deg', origin: 'top left'    },
+  { top: '32%', left: '13%', rotate: '-1.7deg', origin: 'top left'    },
+  { top: '59%', left: '2%',  rotate:  '1.8deg', origin: 'bottom left' },
+  { top: '55%', left: '11%', rotate: '-1.0deg', origin: 'bottom left' },
 ] as const;
 
-const CARD_W     = 28;               // vw
-const CARD_H     = CARD_W * 9 / 16; // vw — 16:9
-const ADVANCE_MS = 2600;             // ms between steps
+// scale(5) expands a 10vw image to 50vw — exactly 1/4 of a 16:9 viewport area
+const THUMB_W    = 10;  // vw
+const SCALE_FULL = 5;
 
-function Carousel3D({ images, active }: { images: string[]; active: boolean }) {
-  const N = images.length;
-
-  // Queue of 7 items — index 3 is center. Advancing pops front, pushes new to back.
-  const [queue, setQueue] = useState<Item[]>(() =>
-    Array.from({ length: 7 }, (_, i) => ({ id: i, src: images[i % N] }))
-  );
-  const nextId  = useRef(7);
-  const nextImg = useRef(7 % N);
-
-  useEffect(() => {
-    if (!active || N === 0) return;
-    const timer = setInterval(() => {
-      setQueue(prev => [
-        ...prev.slice(1),
-        { id: nextId.current++, src: images[nextImg.current] },
-      ]);
-      nextImg.current = (nextImg.current + 1) % N;
-    }, ADVANCE_MS);
-    return () => clearInterval(timer);
-  }, [active, images, N]);
+function ProjectGrid({ images, active }: { images: string[]; active: boolean }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   return (
     <div
       aria-hidden="true"
       style={{
-        position:          'absolute',
-        bottom:            '9%',
-        left:              0,
-        right:             0,
-        height:            `${CARD_H * 1.4}vw`,
-        perspective:       '1100px',
-        perspectiveOrigin: '50% 50%',
-        pointerEvents:     'none',
-        opacity:           active ? 1 : 0,
-        transition:        'opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+        position:      'absolute',
+        inset:         0,
+        pointerEvents: active ? 'auto' : 'none',
+        opacity:       active ? 1 : 0,
+        transition:    'opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
       }}
     >
-      {queue.map((item, qi) => {
-        const s = SLOTS[qi];
+      {images.map((src, i) => {
+        const pos       = GRID_POS[i % GRID_POS.length];
+        const isHovered = hoveredIdx === i;
+        const isDimmed  = hoveredIdx !== null && !isHovered;
+
         return (
           <img
-            key={item.id}
-            src={item.src}
+            key={i}
+            src={src}
             alt=""
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}
             style={{
-              position:     'absolute',
-              top:          '50%',
-              left:         '50%',
-              width:        `${CARD_W}vw`,
-              height:       `${CARD_H}vw`,
-              marginTop:    `${-(CARD_H / 2)}vw`,
-              marginLeft:   `${-(CARD_W / 2)}vw`,
-              objectFit:    'cover',
-              display:      'block',
-              borderRadius: '3px',
-              transform:    `translateX(${s.x}vw) scale(${s.scale}) rotateY(${s.ry}deg)`,
-              opacity:      s.opacity,
-              zIndex:       s.zIdx,
-              transition:   'transform 0.88s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.88s cubic-bezier(0.22, 1, 0.36, 1)',
-              willChange:   'transform, opacity',
+              position:        'absolute',
+              top:             pos.top,
+              left:            pos.left,
+              width:           `${THUMB_W}vw`,
+              aspectRatio:     '16 / 9',
+              objectFit:       'cover',
+              display:         'block',
+              borderRadius:    '3px',
+              transformOrigin: pos.origin,
+              transform:       isHovered
+                ? `rotate(0deg) scale(${SCALE_FULL})`
+                : `rotate(${pos.rotate}) scale(1)`,
+              opacity:  isHovered ? 1 : isDimmed ? 0.07 : 0.26,
+              zIndex:   isHovered ? 15 : isDimmed ? 0 : i + 1,
+              transition:
+                'transform 0.52s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.38s ease',
+              willChange: 'transform, opacity',
+              cursor:     'pointer',
             }}
           />
         );
@@ -111,18 +91,34 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const [zone,   setZone]   = useState<Zone>(null);
   const [labels, setLabels] = useState({ design: 0, ai: 0, astrion: 0 });
 
+  // Shared ref drives MouseScrub without triggering re-renders on every mousemove
+  const cursorXRef = useRef<number>(0.5);
+
   const getZone = (nx: number): Zone =>
     nx < 0.33 ? 'design' : nx > 0.66 ? 'astrion' : 'ai';
 
-  const handleMouseX = useCallback((nx: number) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    cursorXRef.current = nx;
     const z = getZone(nx);
     setZone(z);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
   }, []);
 
   const handleMouseLeave = useCallback(() => {
+    cursorXRef.current = 0.5;
     setZone(null);
     setLabels({ design: 0, ai: 0, astrion: 0 });
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const nx = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
+    cursorXRef.current = nx;
+    const z = getZone(nx);
+    setZone(z);
+    setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
   }, []);
 
   const handleClick    = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
@@ -137,25 +133,24 @@ export default function BrainHero({ thumbs = [] }: Props) {
         background: '#000', position: 'relative', overflow: 'hidden',
         cursor: zone ? 'pointer' : 'crosshair',
       }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onTouchMove={handleTouchMove}
       onClick={handleClick}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Layer 1 — 3D coverflow carousel (design zone only) */}
-      <Carousel3D images={thumbs} active={inDesign} />
+      {/* Layer 1 — project image grid; events pass through brain wrapper above */}
+      <ProjectGrid images={thumbs} active={inDesign} />
 
-      {/* Layer 2 — brain video, screen-blended so black bg is transparent */}
+      {/* Layer 2 — brain video (screen blend; pointer-events:none so grid gets hover) */}
       <div
         style={{
           position: 'absolute', inset: 0,
           mixBlendMode: 'screen',
+          pointerEvents: 'none',
         }}
       >
-        <MouseScrub
-          src={VIDEO_SRC}
-          poster={POSTER_SRC}
-          onMouseX={handleMouseX}
-          onMouseLeave={handleMouseLeave}
-        />
+        <MouseScrub src={VIDEO_SRC} poster={POSTER_SRC} cursorXRef={cursorXRef} />
       </div>
 
       {/* Layer 3 — zone labels */}
