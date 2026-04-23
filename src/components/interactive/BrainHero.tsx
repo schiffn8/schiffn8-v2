@@ -8,7 +8,6 @@ type EdgeZone  = 'design' | 'astrion';
 type AnimPhase = 'scrubbing' | 'animating' | 'reversing';
 
 const ROUTES = { design: '/work', ai: '/ai', astrion: '/astrion' } as const;
-const COLORS = { design: '#ff6030', ai: '#00e5ff', astrion: '#4488ff' } as const;
 
 const VIDEO_SRC  = '/videos/brain-transition.mp4';
 const POSTER_SRC = '/images/brain-ai.webp';
@@ -98,8 +97,8 @@ function CursorBubble({ zone }: { zone: Zone }) {
         marginTop:      -8,
         marginLeft:     -8,
         borderRadius:   '50%',
-        background:     '#fff',
-        mixBlendMode:   'difference',
+        background:     '#000',
+        mixBlendMode:   'multiply',
         pointerEvents:  'none',
       }} />
       {/* Label */}
@@ -113,9 +112,10 @@ function CursorBubble({ zone }: { zone: Zone }) {
         transition:     'opacity 0.3s ease',
       }}>
         <span style={{
-          fontFamily:    'var(--font-mono)',
-          fontSize:      '0.58rem',
-          letterSpacing: '0.2em',
+          fontFamily:    'var(--font-display)',
+          fontSize:      '0.72rem',
+          fontWeight:    700,
+          letterSpacing: '0.12em',
           textTransform: 'uppercase',
           color:         'rgba(255,255,255,0.9)',
           userSelect:    'none',
@@ -271,7 +271,6 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const [animZone,   setAnimZone]   = useState<EdgeZone | null>(null);
   const [activeZone, setActiveZone] = useState<EdgeZone | null>(null);
   const [phase,      setPhase]      = useState<AnimPhase>('scrubbing');
-  const [labels,     setLabels]     = useState({ design: 0, ai: 0, astrion: 0 });
   const cursorXRef  = useRef<number>(0.5);
   const lastMoveRef = useRef<number>(Date.now());
 
@@ -310,7 +309,6 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const az = getAnimZone(nx);
     setZone(z);
     setAnimZone(az);
-    setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
     // Reverse only when cursor moves back into the scrub area (25–75%)
     setPhase(prev => {
       if (prev !== 'animating') return prev;
@@ -325,7 +323,6 @@ export default function BrainHero({ thumbs = [] }: Props) {
     lastMoveRef.current = Date.now();
     setZone(null);
     setAnimZone(null);
-    setLabels({ design: 0, ai: 0, astrion: 0 });
     setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
 
@@ -338,7 +335,6 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const az = getAnimZone(nx);
     setZone(z);
     setAnimZone(az);
-    setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
     setPhase(prev => {
       if (prev !== 'animating') return prev;
       if (activeZone === 'design'  && nx <  0.25) return prev;
@@ -389,37 +385,6 @@ export default function BrainHero({ thumbs = [] }: Props) {
 
       {/* Layer 2 — 2×3 project image grid (left third) */}
       <ProjectGrid images={thumbs} />
-
-      {/* Layer 3 — zone labels */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-          alignItems: 'flex-end', padding: '0 6% 7%',
-          zIndex: 5,
-        }}
-      >
-        {(['design', 'ai', 'astrion'] as const).map((z) => (
-          <span
-            key={z}
-            style={{
-              display:       'block',
-              textAlign:     z === 'design' ? 'left' : z === 'astrion' ? 'right' : 'center',
-              fontFamily:    'var(--font-mono)',
-              fontSize:      'clamp(0.65rem, 1.2vw, 0.85rem)',
-              letterSpacing: '0.25em',
-              textTransform: 'uppercase',
-              color:         COLORS[z],
-              opacity:       labels[z],
-              transition:    'opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-              userSelect:    'none',
-            }}
-          >
-            {z}
-          </span>
-        ))}
-      </div>
 
       {/* Screen-reader nav */}
       <nav
