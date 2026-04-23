@@ -189,8 +189,33 @@ function ZoneVideo({ activeZone, reversing, onReversed }: ZoneVideoProps) {
 
 // ─── Project image grid ───────────────────────────────────────────────────────
 
+// Radius matches the cursor ring (96px diameter → 48px radius)
+const MASK_RADIUS = 48;
+
 function ProjectGrid({ images }: { images: string[] }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const imgRefs    = useRef<(HTMLImageElement | null)[]>([]);
+  const cellRefs   = useRef<(HTMLDivElement  | null)[]>([]);
+  const hoveredRef = useRef<number | null>(null);
+
+  // Update mask on every mousemove via direct DOM — zero React re-renders
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const idx = hoveredRef.current;
+      if (idx === null) return;
+      const cell = cellRefs.current[idx];
+      const img  = imgRefs.current[idx];
+      if (!cell || !img) return;
+      const rect = cell.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const mask = `radial-gradient(circle ${MASK_RADIUS}px at ${x}px ${y}px, black 55%, transparent 100%)`;
+      img.style.webkitMaskImage = mask;
+      img.style.maskImage       = mask;
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
 
   return (
     <div
@@ -210,22 +235,38 @@ function ProjectGrid({ images }: { images: string[] }) {
       {images.slice(0, 6).map((src, i) => (
         <div
           key={i}
+          ref={el => { cellRefs.current[i] = el; }}
           style={{ overflow: 'hidden', position: 'relative' }}
-          onMouseEnter={() => setHoveredIdx(i)}
-          onMouseLeave={() => setHoveredIdx(null)}
+          onMouseEnter={(e) => {
+            // Snap mask to entry position immediately — avoids full-image flash
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const img = imgRefs.current[i];
+            if (img) {
+              const mask = `radial-gradient(circle ${MASK_RADIUS}px at ${x}px ${y}px, black 55%, transparent 100%)`;
+              img.style.webkitMaskImage = mask;
+              img.style.maskImage       = mask;
+            }
+            hoveredRef.current = i;
+            setHoveredIdx(i);
+          }}
+          onMouseLeave={() => {
+            hoveredRef.current = null;
+            setHoveredIdx(null);
+          }}
         >
           <img
             src={src}
             alt=""
+            ref={el => { imgRefs.current[i] = el; }}
             style={{
               width:      '100%',
               height:     '100%',
               objectFit:  'cover',
               display:    'block',
               opacity:    hoveredIdx === i ? 1 : 0,
-              transform:  hoveredIdx === i ? 'scale(1.05)' : 'scale(1)',
-              transition: 'opacity 0.32s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
-              willChange: 'opacity, transform',
+              transition: 'opacity 0.25s ease',
             }}
           />
         </div>
