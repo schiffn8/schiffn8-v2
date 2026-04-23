@@ -24,12 +24,7 @@ const getAnimZone = (nx: number): EdgeZone | null =>
 
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
-// Lerp-following circle that expands from a dot to a labeled ring when the
-// cursor enters a named zone. Inspired by lauramonin.com.
-
-const ZONE_LABELS: Record<NonNullable<Zone>, string> = {
-  design: 'Design', ai: 'AI', astrion: 'Astrion',
-};
+// Lerp-following ring — expands into view on zone entry, collapses on exit.
 
 function CursorBubble({ zone }: { zone: Zone }) {
   const outerRef  = useRef<HTMLDivElement>(null);
@@ -60,9 +55,6 @@ function CursorBubble({ zone }: { zone: Zone }) {
     };
   }, []);
 
-  const label    = zone ? ZONE_LABELS[zone] : '';
-  const expanded = Boolean(label);
-
   return (
     <div
       ref={outerRef}
@@ -78,52 +70,14 @@ function CursorBubble({ zone }: { zone: Zone }) {
         willChange:    'transform',
       }}
     >
-      {/* Ring — scales from dot to full circle */}
       <div style={{
-        position:       'absolute',
-        inset:          0,
-        borderRadius:   '50%',
-        border:         '1px solid rgba(255,255,255,0.65)',
-        transform:      expanded ? 'scale(1)' : 'scale(0.1)',
-        transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+        position:   'absolute',
+        inset:      0,
+        borderRadius: '50%',
+        border:     '1px solid rgba(255,255,255,0.65)',
+        transform:  zone ? 'scale(1)' : 'scale(0)',
+        transition: 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
       }} />
-      {/* Difference-blend dot — always centered, 1/6 of ring size */}
-      <div style={{
-        position:       'absolute',
-        top:            '50%',
-        left:           '50%',
-        width:          16,
-        height:         16,
-        marginTop:      -8,
-        marginLeft:     -8,
-        borderRadius:   '50%',
-        background:     '#000',
-        mixBlendMode:   'multiply',
-        pointerEvents:  'none',
-      }} />
-      {/* Label */}
-      <div style={{
-        position:       'absolute',
-        inset:          0,
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        opacity:        expanded ? 1 : 0,
-        transition:     'opacity 0.3s ease',
-      }}>
-        <span style={{
-          fontFamily:    'var(--font-display)',
-          fontSize:      '0.72rem',
-          fontWeight:    700,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color:         'rgba(255,255,255,0.9)',
-          userSelect:    'none',
-          whiteSpace:    'nowrap',
-        }}>
-          {label}
-        </span>
-      </div>
     </div>
   );
 }
