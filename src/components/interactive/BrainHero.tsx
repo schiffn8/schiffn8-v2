@@ -24,7 +24,9 @@ const getAnimZone = (nx: number): EdgeZone | null =>
 
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
-// Lerp-following ring — expands into view on zone entry, collapses on exit.
+const ZONE_LABELS: Record<NonNullable<Zone>, string> = {
+  design: 'Design', ai: 'AI', astrion: 'Astrion',
+};
 
 function CursorBubble({ zone }: { zone: Zone }) {
   const outerRef  = useRef<HTMLDivElement>(null);
@@ -71,13 +73,31 @@ function CursorBubble({ zone }: { zone: Zone }) {
       }}
     >
       <div style={{
-        position:   'absolute',
-        inset:      0,
-        borderRadius: '50%',
-        border:     '1px solid rgba(255,255,255,0.65)',
-        transform:  zone ? 'scale(1)' : 'scale(0)',
-        transition: 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
-      }} />
+        position:       'absolute',
+        inset:          0,
+        borderRadius:   '50%',
+        border:         '1px solid rgba(255,255,255,0.65)',
+        transform:      zone ? 'scale(1)' : 'scale(0)',
+        transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+        display:        'flex',
+        alignItems:     'center',
+        justifyContent: 'center',
+      }}>
+        <span style={{
+          fontFamily:    'var(--font-display)',
+          fontSize:      '0.72rem',
+          fontWeight:    700,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color:         'rgba(255,255,255,0.9)',
+          opacity:       zone ? 1 : 0,
+          transition:    'opacity 0.25s ease',
+          userSelect:    'none',
+          whiteSpace:    'nowrap',
+        }}>
+          {zone ? ZONE_LABELS[zone] : ''}
+        </span>
+      </div>
     </div>
   );
 }
