@@ -77,6 +77,8 @@ function CursorBubble({ zone }: { zone: Zone }) {
         inset:          0,
         borderRadius:   '50%',
         border:         '1px solid rgba(255,255,255,0.65)',
+        background:     '#fff',
+        mixBlendMode:   'exclusion',
         transform:      zone ? 'scale(1)' : 'scale(0)',
         transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
         display:        'flex',
