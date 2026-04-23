@@ -230,16 +230,28 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const [activeZone, setActiveZone] = useState<Zone>(null);
   const [phase,      setPhase]      = useState<AnimPhase>('scrubbing');
   const [labels,     setLabels]     = useState({ design: 0, ai: 0, astrion: 0 });
-  const cursorXRef = useRef<number>(0.5);
+  const cursorXRef  = useRef<number>(0.5);
+  const lastMoveRef = useRef<number>(Date.now());
 
-  // Settle timer — keyed to animZone, uses per-zone settle time
+  // Self-rescheduling settle timer: checks lastMoveRef on fire so the cursor
+  // must be truly still for the full settle duration — not just in the zone.
   useEffect(() => {
     if (phase !== 'scrubbing' || !animZone) return;
-    const t = setTimeout(() => {
-      setActiveZone(animZone);
-      setPhase('animating');
-    }, getAnimSettle(animZone));
-    return () => clearTimeout(t);
+    const settle = getAnimSettle(animZone);
+    let tid: ReturnType<typeof setTimeout>;
+
+    const check = () => {
+      const idle = Date.now() - lastMoveRef.current;
+      if (idle >= settle) {
+        setActiveZone(animZone);
+        setPhase('animating');
+      } else {
+        tid = setTimeout(check, settle - idle);
+      }
+    };
+
+    tid = setTimeout(check, settle);
+    return () => clearTimeout(tid);
   }, [animZone, phase]);
 
   // Called by ZoneVideo once the reverse scrub reaches frame 0
@@ -254,7 +266,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    cursorXRef.current = nx;
+    cursorXRef.current  = nx;
+    lastMoveRef.current = Date.now();
     const z  = getZone(nx);
     const az = getAnimZone(nx);
     setZone(z);
@@ -264,7 +277,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    cursorXRef.current = 0.5;
+    cursorXRef.current  = 0.5;
+    lastMoveRef.current = Date.now();
     setZone(null);
     setAnimZone(null);
     setLabels({ design: 0, ai: 0, astrion: 0 });
@@ -274,7 +288,8 @@ export default function BrainHero({ thumbs = [] }: Props) {
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
-    cursorXRef.current = nx;
+    cursorXRef.current  = nx;
+    lastMoveRef.current = Date.now();
     const z  = getZone(nx);
     const az = getAnimZone(nx);
     setZone(z);
