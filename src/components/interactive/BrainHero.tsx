@@ -18,8 +18,24 @@ const ZONE_VIDEOS: Record<NonNullable<Zone>, string> = {
   astrion: '/videos/zone-astrion.mp4',
 };
 
-const SETTLE_MS   = 1500;
 const REWIND_RATE = 4; // × realtime
+
+// Each zone has its own trigger region and settle time.
+// Design/astrion fire when the cursor pushes past the scrub endpoints (25%/75%).
+// AI only fires when perfectly centered (middle 5%) for longer.
+const ANIM_ZONES: { zone: NonNullable<Zone>; min: number; max: number; settle: number }[] = [
+  { zone: 'design',  min: 0,     max: 0.25,  settle: 500  },
+  { zone: 'ai',      min: 0.475, max: 0.525, settle: 1500 },
+  { zone: 'astrion', min: 0.75,  max: 1,     settle: 500  },
+];
+
+const getAnimZone = (nx: number): Zone => {
+  const match = ANIM_ZONES.find(z => nx >= z.min && nx <= z.max);
+  return match ? match.zone : null;
+};
+
+const getAnimSettle = (z: NonNullable<Zone>) =>
+  ANIM_ZONES.find(a => a.zone === z)!.settle;
 
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
@@ -209,21 +225,22 @@ interface Props {
 }
 
 export default function BrainHero({ thumbs = [] }: Props) {
-  const [zone,       setZone]       = useState<Zone>(null);
+  const [zone,       setZone]       = useState<Zone>(null);      // label/nav zone (33%/66%)
+  const [animZone,   setAnimZone]   = useState<Zone>(null);      // animation trigger zone
   const [activeZone, setActiveZone] = useState<Zone>(null);
   const [phase,      setPhase]      = useState<AnimPhase>('scrubbing');
   const [labels,     setLabels]     = useState({ design: 0, ai: 0, astrion: 0 });
   const cursorXRef = useRef<number>(0.5);
 
-  // Settle timer — only runs while scrubbing; resets on any zone change
+  // Settle timer — keyed to animZone, uses per-zone settle time
   useEffect(() => {
-    if (phase !== 'scrubbing' || !zone) return;
+    if (phase !== 'scrubbing' || !animZone) return;
     const t = setTimeout(() => {
-      setActiveZone(zone);
+      setActiveZone(animZone);
       setPhase('animating');
-    }, SETTLE_MS);
+    }, getAnimSettle(animZone));
     return () => clearTimeout(t);
-  }, [zone, phase]);
+  }, [animZone, phase]);
 
   // Called by ZoneVideo once the reverse scrub reaches frame 0
   const handleReversed = useCallback(() => {
@@ -238,16 +255,18 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     cursorXRef.current = nx;
-    const z = getZone(nx);
+    const z  = getZone(nx);
+    const az = getAnimZone(nx);
     setZone(z);
+    setAnimZone(az);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
-    // Any movement while animating triggers the reverse-to-start sequence
     setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     cursorXRef.current = 0.5;
     setZone(null);
+    setAnimZone(null);
     setLabels({ design: 0, ai: 0, astrion: 0 });
     setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
@@ -256,8 +275,10 @@ export default function BrainHero({ thumbs = [] }: Props) {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = Math.max(0, Math.min(1, (e.touches[0].clientX - rect.left) / rect.width));
     cursorXRef.current = nx;
-    const z = getZone(nx);
+    const z  = getZone(nx);
+    const az = getAnimZone(nx);
     setZone(z);
+    setAnimZone(az);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
     setPhase(prev => prev === 'animating' ? 'reversing' : prev);
   }, []);
