@@ -88,19 +88,19 @@ function CursorBubble({ zone }: { zone: Zone }) {
         transform:      expanded ? 'scale(1)' : 'scale(0.1)',
         transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
       }} />
-      {/* Dot — visible only when no label */}
+      {/* Difference-blend dot — always centered, 1/6 of ring size */}
       <div style={{
         position:       'absolute',
         top:            '50%',
         left:           '50%',
-        width:          8,
-        height:         8,
-        marginTop:      -4,
-        marginLeft:     -4,
+        width:          16,
+        height:         16,
+        marginTop:      -8,
+        marginLeft:     -8,
         borderRadius:   '50%',
-        background:     'rgba(255,255,255,0.8)',
-        transform:      expanded ? 'scale(0)' : 'scale(1)',
-        transition:     'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+        background:     '#fff',
+        mixBlendMode:   'difference',
+        pointerEvents:  'none',
       }} />
       {/* Label */}
       <div style={{
