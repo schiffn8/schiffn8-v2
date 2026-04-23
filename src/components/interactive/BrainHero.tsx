@@ -24,9 +24,9 @@ const REWIND_RATE = 4; // × realtime
 // Design/astrion fire when the cursor pushes past the scrub endpoints (25%/75%).
 // AI only fires when perfectly centered (middle 5%) for longer.
 const ANIM_ZONES: { zone: NonNullable<Zone>; min: number; max: number; settle: number }[] = [
-  { zone: 'design',  min: 0,     max: 0.25,  settle: 500  },
-  { zone: 'ai',      min: 0.475, max: 0.525, settle: 1500 },
-  { zone: 'astrion', min: 0.75,  max: 1,     settle: 500  },
+  { zone: 'design',  min: 0,     max: 0.25,  settle: 0 },
+  { zone: 'ai',      min: 0.475, max: 0.525, settle: 0 },
+  { zone: 'astrion', min: 0.75,  max: 1,     settle: 0 },
 ];
 
 const getAnimZone = (nx: number): Zone => {
