@@ -29,7 +29,8 @@ const ZONE_LABELS: Record<NonNullable<Zone>, string> = {
 };
 
 function CursorBubble({ zone }: { zone: Zone }) {
-  const outerRef  = useRef<HTMLDivElement>(null);
+  const blendRef  = useRef<HTMLDivElement>(null);
+  const labelRef  = useRef<HTMLDivElement>(null);
   const posRef    = useRef({ x: -200, y: -200 });
   const targetRef = useRef({ x: -200, y: -200 });
   const rafRef    = useRef<number>();
@@ -43,10 +44,9 @@ function CursorBubble({ zone }: { zone: Zone }) {
     const tick = () => {
       posRef.current.x += (targetRef.current.x - posRef.current.x) * 0.1;
       posRef.current.y += (targetRef.current.y - posRef.current.y) * 0.1;
-      if (outerRef.current) {
-        outerRef.current.style.transform =
-          `translate(${posRef.current.x}px, ${posRef.current.y}px) translate(-50%, -50%)`;
-      }
+      const t = `translate(${posRef.current.x}px, ${posRef.current.y}px) translate(-50%, -50%)`;
+      if (blendRef.current) blendRef.current.style.transform = t;
+      if (labelRef.current) labelRef.current.style.transform = t;
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -57,50 +57,72 @@ function CursorBubble({ zone }: { zone: Zone }) {
     };
   }, []);
 
+  const label    = zone ? ZONE_LABELS[zone] : '';
+  const expanded = Boolean(label);
+
   return (
-    <div
-      ref={outerRef}
-      aria-hidden="true"
-      style={{
-        position:      'fixed',
-        top:           0,
-        left:          0,
-        width:         96,
-        height:        96,
-        pointerEvents: 'none',
-        zIndex:        9999,
-        willChange:    'transform',
-        mixBlendMode:  'difference',
-      }}
-    >
-      <div style={{
-        position:       'absolute',
-        inset:          0,
-        borderRadius:   '50%',
-        border:         '1px solid rgba(255,255,255,0.65)',
-        background:     '#fff',
-        transform:      zone ? 'scale(1)' : 'scale(0)',
-        transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-      }}>
+    <>
+      {/* Blend circle — difference blend against the page */}
+      <div
+        ref={blendRef}
+        aria-hidden="true"
+        style={{
+          position:      'fixed',
+          top:           0,
+          left:          0,
+          width:         96,
+          height:        96,
+          pointerEvents: 'none',
+          zIndex:        9999,
+          willChange:    'transform',
+          mixBlendMode:  'difference',
+        }}
+      >
+        <div style={{
+          position:     'absolute',
+          inset:        0,
+          borderRadius: '50%',
+          border:       '1px solid rgba(255,255,255,0.65)',
+          background:   '#fff',
+          transform:    expanded ? 'scale(1)' : 'scale(0)',
+          transition:   'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+        }} />
+      </div>
+
+      {/* Label — separate element above the blend layer, always black */}
+      <div
+        ref={labelRef}
+        aria-hidden="true"
+        style={{
+          position:       'fixed',
+          top:            0,
+          left:           0,
+          width:          96,
+          height:         96,
+          pointerEvents:  'none',
+          zIndex:         10000,
+          willChange:     'transform',
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'center',
+        }}
+      >
         <span style={{
           fontFamily:    'var(--font-display)',
           fontSize:      '0.72rem',
           fontWeight:    700,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
-          color:         'rgba(255,255,255,0.9)',
-          opacity:       zone ? 1 : 0,
+          color:         '#000',
+          opacity:       expanded ? 1 : 0,
           transition:    'opacity 0.25s ease',
           userSelect:    'none',
           whiteSpace:    'nowrap',
         }}>
-          {zone ? ZONE_LABELS[zone] : ''}
+          {label}
         </span>
       </div>
-    </div>
+    </>
   );
 }
 
