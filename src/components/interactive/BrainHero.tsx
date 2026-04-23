@@ -25,38 +25,106 @@ const getAnimZone = (nx: number): EdgeZone | null =>
 
 // ─── Cursor bubble ────────────────────────────────────────────────────────────
 
-function CursorBubble() {
-  const ref = useRef<HTMLDivElement>(null);
+// Lerp-following circle that expands from a dot to a labeled ring when the
+// cursor enters a named zone. Inspired by lauramonin.com.
+
+const ZONE_LABELS: Record<NonNullable<Zone>, string> = {
+  design: 'Design', ai: 'AI', astrion: 'Astrion',
+};
+
+function CursorBubble({ zone }: { zone: Zone }) {
+  const outerRef  = useRef<HTMLDivElement>(null);
+  const posRef    = useRef({ x: -200, y: -200 });
+  const targetRef = useRef({ x: -200, y: -200 });
+  const rafRef    = useRef<number>();
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const move = (e: MouseEvent) => {
-      el.style.transform = `translate(${e.clientX - 29}px, ${e.clientY - 29}px)`;
+    const onMove = (e: MouseEvent) => {
+      targetRef.current = { x: e.clientX, y: e.clientY };
     };
-    window.addEventListener('mousemove', move, { passive: true });
-    return () => window.removeEventListener('mousemove', move);
+    window.addEventListener('mousemove', onMove, { passive: true });
+
+    const tick = () => {
+      posRef.current.x += (targetRef.current.x - posRef.current.x) * 0.1;
+      posRef.current.y += (targetRef.current.y - posRef.current.y) * 0.1;
+      if (outerRef.current) {
+        outerRef.current.style.transform =
+          `translate(${posRef.current.x}px, ${posRef.current.y}px) translate(-50%, -50%)`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      cancelAnimationFrame(rafRef.current!);
+    };
   }, []);
+
+  const label    = zone ? ZONE_LABELS[zone] : '';
+  const expanded = Boolean(label);
 
   return (
     <div
-      ref={ref}
+      ref={outerRef}
       aria-hidden="true"
       style={{
         position:      'fixed',
         top:           0,
         left:          0,
-        width:         58,
-        height:        58,
-        borderRadius:  '50%',
-        background:    '#fff',
-        mixBlendMode:  'difference',
+        width:         96,
+        height:        96,
         pointerEvents: 'none',
-        transform:     'translate(-120px, -120px)',
         zIndex:        9999,
         willChange:    'transform',
       }}
-    />
+    >
+      {/* Ring — scales from dot to full circle */}
+      <div style={{
+        position:       'absolute',
+        inset:          0,
+        borderRadius:   '50%',
+        border:         '1px solid rgba(255,255,255,0.65)',
+        transform:      expanded ? 'scale(1)' : 'scale(0.1)',
+        transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+      }} />
+      {/* Dot — visible only when no label */}
+      <div style={{
+        position:       'absolute',
+        top:            '50%',
+        left:           '50%',
+        width:          8,
+        height:         8,
+        marginTop:      -4,
+        marginLeft:     -4,
+        borderRadius:   '50%',
+        background:     'rgba(255,255,255,0.8)',
+        transform:      expanded ? 'scale(0)' : 'scale(1)',
+        transition:     'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+      }} />
+      {/* Label */}
+      <div style={{
+        position:       'absolute',
+        inset:          0,
+        display:        'flex',
+        alignItems:     'center',
+        justifyContent: 'center',
+        opacity:        expanded ? 1 : 0,
+        transition:     'opacity 0.3s ease',
+      }}>
+        <span style={{
+          fontFamily:    'var(--font-mono)',
+          fontSize:      '0.58rem',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color:         'rgba(255,255,255,0.9)',
+          userSelect:    'none',
+          whiteSpace:    'nowrap',
+        }}>
+          {label}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -363,7 +431,7 @@ export default function BrainHero({ thumbs = [] }: Props) {
         <a href="/astrion">Astrion</a>
       </nav>
 
-      <CursorBubble />
+      <CursorBubble zone={zone} />
     </div>
   );
 }
