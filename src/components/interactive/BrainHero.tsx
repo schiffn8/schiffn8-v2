@@ -273,8 +273,15 @@ export default function BrainHero({ thumbs = [] }: Props) {
     setZone(z);
     setAnimZone(az);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
-    setPhase(prev => prev === 'animating' ? 'reversing' : prev);
-  }, []);
+    // Design/astrion: only reverse when cursor re-enters the scrub area (25–75%).
+    // Movement anywhere within their own trigger zones lets the video play freely.
+    setPhase(prev => {
+      if (prev !== 'animating') return prev;
+      if (activeZone === 'design'  && nx <  0.25) return prev;
+      if (activeZone === 'astrion' && nx >  0.75) return prev;
+      return 'reversing';
+    });
+  }, [activeZone]);
 
   const handleMouseLeave = useCallback(() => {
     cursorXRef.current  = 0.5;
@@ -295,8 +302,13 @@ export default function BrainHero({ thumbs = [] }: Props) {
     setZone(z);
     setAnimZone(az);
     setLabels({ design: 0, ai: 0, astrion: 0, [z]: 1 });
-    setPhase(prev => prev === 'animating' ? 'reversing' : prev);
-  }, []);
+    setPhase(prev => {
+      if (prev !== 'animating') return prev;
+      if (activeZone === 'design'  && nx <  0.25) return prev;
+      if (activeZone === 'astrion' && nx >  0.75) return prev;
+      return 'reversing';
+    });
+  }, [activeZone]);
 
   const handleClick    = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
   const handleTouchEnd = useCallback(() => { if (zone) window.location.href = ROUTES[zone]; }, [zone]);
