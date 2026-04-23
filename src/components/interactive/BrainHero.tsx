@@ -70,6 +70,7 @@ function CursorBubble({ zone }: { zone: Zone }) {
         pointerEvents: 'none',
         zIndex:        9999,
         willChange:    'transform',
+        mixBlendMode:  'difference',
       }}
     >
       <div style={{
@@ -78,7 +79,6 @@ function CursorBubble({ zone }: { zone: Zone }) {
         borderRadius:   '50%',
         border:         '1px solid rgba(255,255,255,0.65)',
         background:     '#fff',
-        mixBlendMode:   'difference',
         transform:      zone ? 'scale(1)' : 'scale(0)',
         transition:     'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
         display:        'flex',
